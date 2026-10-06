@@ -20,7 +20,8 @@ RSpec.describe "Feature background on the feature page", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Background")
-    expect(response.body).to include("the store is open\nthe shelf is empty")
+    field = Nokogiri::HTML(response.body).css("[contenteditable]").find { |node| node.text.include?("the store is open") }
+    expect(field.children.map(&:text)).to eq([ "the store is open", "the shelf is empty" ])
   end
 
   it "offers to add a background when the feature has none" do

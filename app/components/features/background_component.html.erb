@@ -16,15 +16,16 @@
   <div class="text-xs font-medium uppercase tracking-wider mb-1 text-stone-500 dark:text-white/50">Background</div>
   <div class="flex gap-2 text-sm">
     <span class="flex-shrink-0 text-xs font-medium uppercase tracking-wider pt-0.5 w-10 text-emerald-600 dark:text-emerald-400">Given</span>
-    <span
+    <div
       class="flex-1 whitespace-pre-wrap text-stone-800 dark:text-white/90 leading-relaxed editable-placeholder is-editable"
       contenteditable="true"
       data-placeholder="Add a background..."
+      x-on:input="markTableRows($el)"
       x-on:blur="updateBackground($event)"
       hx-patch="<%= update_path %>"
       hx-trigger="save-background"
       hx-include="#<%= form_id %>"
       hx-swap="none"
-    ><%= feature.background.to_s.strip.presence %></span>
+    ><%= helpers.step_lines(feature.background) %></div>
   </div>
 </div>
