@@ -61,6 +61,26 @@ You can then plug all your SMTP settings from that provider into Gwirian via the
 
 You can find out more about all these settings in the [Rails Action Mailer documentation](https://guides.rubyonrails.org/action_mailer_basics.html#action-mailer-configuration).
 
+#### Background jobs
+
+Gwirian sends its email from background jobs, run by [Solid Queue](https://github.com/rails/solid_queue).
+In the Docker image, set `SOLID_QUEUE_IN_PUMA=1` so the web server also runs the job workers; without it, jobs are queued but nothing runs them, and sign-in emails never arrive:
+
+```sh
+docker run --env SOLID_QUEUE_IN_PUMA=1 ...
+```
+
+By default Solid Queue forks a separate process for its supervisor, dispatcher and each worker.
+On a small server you can save memory by running them as threads inside the web server's process instead, with `SOLID_QUEUE_MODE=async` alongside `SOLID_QUEUE_IN_PUMA=1`:
+
+```sh
+docker run --env SOLID_QUEUE_IN_PUMA=1 --env SOLID_QUEUE_MODE=async ...
+```
+
+Jobs stay in the database and are retried as before; only where they run changes.
+The job threads then share the database connection pool with web requests; with `RAILS_MAX_THREADS` unset, that is 3 web threads and a pool of 5 connections.
+Solid Queue recommends its default forked mode wherever memory allows.
+
 #### Base URL
 
 Gwirian needs to know the public URL of your instance so it can generate correct links in certain situations (like when sending emails).
