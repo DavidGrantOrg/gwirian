@@ -31,11 +31,13 @@
     <% end %>
 
     <!-- Sign up link -->
-    <div class="text-center mt-6">
-      <p class="text-stone-500 dark:text-white/60">
-        Don't have an account?
-        <%= link_to "Sign up", new_user_path, class: "link" %>
-      </p>
-    </div>
+    <% unless Gwirian.invite_only_signup? %>
+      <div class="text-center mt-6">
+        <p class="text-stone-500 dark:text-white/60">
+          Don't have an account?
+          <%= link_to "Sign up", new_user_path, class: "link" %>
+        </p>
+      </div>
+    <% end %>
   </div>
 </div>

@@ -16,7 +16,10 @@ class UsersController < ApplicationController
 
     @user = User.find_or_initialize_by(email_address: user_params[:email_address])
 
-    if @user.new_record?
+    if @user.new_record? && Gwirian.invite_only_signup?
+      # The same flow as signing in with an unknown address, so it doesn't reveal who has an account
+      redirect_to_fake_session_magic_link(@user.email_address)
+    elsif @user.new_record?
       if @user.save
         UserMailer.welcome(@user).deliver_later
         UserMailer.signup_notification(@user).deliver_later if Rails.application.config.signup.notify_email.present?

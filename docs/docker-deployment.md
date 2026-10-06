@@ -70,6 +70,26 @@ Set `BASE_URL` to the full URL where your Gwirian instance is accessible:
 docker run --env BASE_URL=https://gwirian.example.com ...
 ```
 
+#### Invite-only sign-up
+
+By default anyone can sign up.
+To allow only people you invite, set `SIGNUP=invite_only`:
+
+```sh
+docker run --env SIGNUP=invite_only ...
+```
+
+The sign-in page then has no sign-up link, and signing up with an address Gwirian doesn't know creates no account and sends no email; it shows the same "check your email" page as signing in with an unknown address.
+Inviting someone to a workspace makes their address known, so they can sign in once invited.
+
+The first account on an invite-only instance has to be created from the command line:
+
+```sh
+docker exec <container> bin/rails runner 'User.create!(email_address: "you@example.com")'
+```
+
+Then sign in with that address as usual, create a workspace, and invite the others from it.
+
 #### Elasticsearch URL
 
 Gwirian uses Elasticsearch for fulltext search and indexing. Set `ELASTICSEARCH_URL` to the full URL where your Elasticsearch instance is accessible:
