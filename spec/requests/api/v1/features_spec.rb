@@ -62,6 +62,7 @@ RSpec.describe "Api::V1::Features", type: :request do
         expect(feature).to have_key("id")
         expect(feature).to have_key("title")
         expect(feature).to have_key("description")
+        expect(feature).to have_key("background")
         expect(feature).to have_key("created_at")
         expect(feature).to have_key("updated_at")
         expect(feature).to have_key("project_id")
@@ -201,6 +202,15 @@ RSpec.describe "Api::V1::Features", type: :request do
           expect(feature.tag_list).to contain_exactly("tag1", "tag2")
         end
 
+        it "stores a background that show then returns" do
+          params = { feature: { title: "New Feature", background: "the store is open\nthe shelf is empty" } }
+          post "/api/v1/projects/#{project.id}/features", params: params, headers: api_headers(workspace_member.api_token)
+          expect(response).to have_http_status(:created)
+
+          get "/api/v1/projects/#{project.id}/features/#{json_response["id"]}", headers: api_headers(workspace_member.api_token)
+          expect(json_response["background"]).to eq("the store is open\nthe shelf is empty")
+        end
+
         context "with validation errors" do
           it "fails with missing title" do
             invalid_params = { feature: { description: "Description only" } }
@@ -288,6 +298,13 @@ RSpec.describe "Api::V1::Features", type: :request do
           expect(response).to have_http_status(:ok)
           expect(json_response["title"]).to eq("Updated Title")
           expect(json_response["description"]).to eq("Updated Description")
+        end
+
+        it "clears the background when given an empty one" do
+          feature.update!(background: "the store is open")
+          patch "/api/v1/projects/#{project.id}/features/#{feature.id}", params: { feature: { background: "" } }, headers: api_headers(workspace_member.api_token)
+          expect(response).to have_http_status(:ok)
+          expect(json_response["background"]).to eq("")
         end
 
         it "handles tag_list parameter" do

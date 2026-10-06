@@ -21,6 +21,10 @@ module Mcp
               type: "string",
               description: "The description of the feature"
             },
+            background: {
+              type: "string",
+              description: "The Background: steps every scenario shares, one per line, each without its Given keyword"
+            },
             tag_list: {
               type: "string",
               description: "Comma-separated list of tags"
@@ -37,7 +41,7 @@ module Mcp
         open_world_hint: false
       )
 
-      def self.call(project_id:, title:, description: nil, tag_list: nil, server_context:)
+      def self.call(project_id:, title:, description: nil, background: nil, tag_list: nil, server_context:)
         handle_errors do
           current_user = server_context[:current_user]
           project = current_user.projects.find_by(id: project_id)
@@ -46,6 +50,7 @@ module Mcp
           feature = project.features.new(
             title: title,
             description: description,
+            background: background,
             tag_list: tag_list
           )
 

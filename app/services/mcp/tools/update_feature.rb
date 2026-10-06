@@ -21,6 +21,10 @@ module Mcp
               type: "string",
               description: "The description of the feature"
             },
+            background: {
+              type: "string",
+              description: "The Background: steps every scenario shares, one per line, each without its Given keyword; an empty string removes them"
+            },
             tag_list: {
               type: "string",
               description: "Comma-separated list of tags"
@@ -37,7 +41,7 @@ module Mcp
         open_world_hint: false
       )
 
-      def self.call(feature_id:, title: nil, description: nil, tag_list: nil, server_context:)
+      def self.call(feature_id:, title: nil, description: nil, background: nil, tag_list: nil, server_context:)
         handle_errors do
           current_user = server_context[:current_user]
           feature = Feature.find_by(id: feature_id)
@@ -46,6 +50,7 @@ module Mcp
           update_params = {}
           update_params[:title] = title if title.present?
           update_params[:description] = description if description.present?
+          update_params[:background] = background unless background.nil?
           update_params[:tag_list] = tag_list if tag_list.present?
 
           if feature.update(update_params)

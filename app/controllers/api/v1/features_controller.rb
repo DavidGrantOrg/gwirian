@@ -1,15 +1,17 @@
 class Api::V1::FeaturesController < Api::V1::ApiController
+  JSON_FIELDS = [ :id, :title, :description, :background, :created_at, :updated_at, :project_id ].freeze
+
   before_action :set_feature, only: [ :show, :update, :destroy ]
 
   def index
     @features = @project.features.order(:title)
     authorize! :read, Feature.new(project: @project)
-    render json: @features.as_json(only: [ :id, :title, :description, :created_at, :updated_at, :project_id ])
+    render json: @features.as_json(only: JSON_FIELDS)
   end
 
   def show
     authorize! :read, @feature
-    render json: @feature.as_json(only: [ :id, :title, :description, :created_at, :updated_at, :project_id ])
+    render json: @feature.as_json(only: JSON_FIELDS)
   end
 
   def create
@@ -17,7 +19,7 @@ class Api::V1::FeaturesController < Api::V1::ApiController
     authorize! :create, @feature
 
     if @feature.save
-      render json: @feature.as_json(only: [ :id, :title, :description, :created_at, :updated_at, :project_id ]), status: :created
+      render json: @feature.as_json(only: JSON_FIELDS), status: :created
     else
       render json: { errors: @feature.errors.full_messages }, status: :unprocessable_entity
     end
@@ -27,7 +29,7 @@ class Api::V1::FeaturesController < Api::V1::ApiController
     authorize! :update, @feature
 
     if @feature.update(feature_params)
-      render json: @feature.as_json(only: [ :id, :title, :description, :created_at, :updated_at, :project_id ])
+      render json: @feature.as_json(only: JSON_FIELDS)
     else
       render json: { errors: @feature.errors.full_messages }, status: :unprocessable_entity
     end
@@ -50,6 +52,6 @@ class Api::V1::FeaturesController < Api::V1::ApiController
   end
 
   def feature_params
-    params.require(:feature).permit(:title, :description, :tag_list)
+    params.require(:feature).permit(:title, :description, :background, :tag_list)
   end
 end
