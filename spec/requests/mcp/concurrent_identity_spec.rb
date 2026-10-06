@@ -37,6 +37,7 @@ RSpec.describe "MCP identity across concurrent requests", type: :request do
 
     post "/mcp", params: list_projects_body, headers: mcp_headers(alice_member)
 
+    expect(interleaved).to be(true), "Bob's request never ran inside Alice's, so this spec proved nothing"
     projects = JSON.parse(json_response.dig("result", "content", 0, "text"))
     expect(projects.map { |p| p["name"] }).to eq([ "Alice's project" ])
     bob_projects = JSON.parse(JSON.parse(bob_session.response.body).dig("result", "content", 0, "text"))
