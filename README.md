@@ -82,6 +82,7 @@ Workspace
 - **Magic Links**: Passwordless authentication via email links (6-character code)
 - **Sessions**: Database-backed session management with expiration
 - **API Tokens**: Workspace-scoped tokens for programmatic access
+- **Invite-only sign-up**: Set `SIGNUP=invite_only` so only invited addresses can get a code (see [docs/docker-deployment.md](docs/docker-deployment.md#invite-only-sign-up))
 
 ### Authorization
 

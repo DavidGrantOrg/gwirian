@@ -1,5 +1,6 @@
 module Gwirian
   SEARCH_BACKENDS = %w[elasticsearch database].freeze
+  SIGNUP_MODES = %w[open invite_only].freeze
 
   class << self
     def saas?
@@ -14,6 +15,15 @@ module Gwirian
         raise ArgumentError, "SEARCH_BACKEND must be \"elasticsearch\" or \"database\", not \"#{backend}\""
       end
       backend == "elasticsearch"
+    end
+
+    # SIGNUP=invite_only lets only addresses Gwirian already knows, such as invited members, get a code.
+    def invite_only_signup?
+      mode = ENV.fetch("SIGNUP", "open")
+      unless SIGNUP_MODES.include?(mode)
+        raise ArgumentError, "SIGNUP must be \"open\" or \"invite_only\", not \"#{mode}\""
+      end
+      mode == "invite_only"
     end
 
     def configure_bundle
