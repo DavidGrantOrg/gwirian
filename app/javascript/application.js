@@ -110,6 +110,13 @@
     );
   }
 
+  // Keeps step_lines' fixed-width font on table rows while a step field is edited.
+  function markTableRows(field) {
+    for (const line of field.children) {
+      line.classList.toggle("font-mono", line.textContent.trimStart().startsWith("|"));
+    }
+  }
+
   function showError(message) {
     Alpine.store("notifications").errorMessage = message;
     Alpine.store("notifications").showError = true;
@@ -329,3 +336,4 @@
   window.showNotice = showNotice;
   window.showAlert = showAlert;
   window.showError = showError;
+  window.markTableRows = markTableRows;

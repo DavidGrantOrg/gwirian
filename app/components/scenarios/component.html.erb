@@ -93,42 +93,45 @@
     <div class="space-y-2 text-sm">
       <div class="flex gap-2">
         <span class="flex-shrink-0 text-xs font-medium uppercase tracking-wider pt-0.5 w-10 text-emerald-600 dark:text-emerald-400">Given</span>
-        <span
+        <div
           class="flex-1 whitespace-pre-wrap text-stone-800 dark:text-white/90 leading-relaxed editable-placeholder is-editable"
           contenteditable="true"
           data-placeholder="Describe the initial context..."
+          x-on:input="markTableRows($el)"
           x-on:blur="updateGiven($event)"
           hx-patch="<%= update_path %>"
           hx-trigger="save-given"
           hx-include="#<%= form_id %>"
           hx-swap="none"
-        ><%= scenario.given.to_s.strip.presence %></span>
+        ><%= helpers.step_lines(scenario.given) %></div>
       </div>
       <div class="flex gap-2">
         <span class="flex-shrink-0 text-xs font-medium uppercase tracking-wider pt-0.5 w-10 text-blue-600 dark:text-blue-400">When</span>
-        <span
+        <div
           class="flex-1 whitespace-pre-wrap text-stone-800 dark:text-white/90 leading-relaxed editable-placeholder is-editable"
           contenteditable="true"
           data-placeholder="Describe the action or event..."
+          x-on:input="markTableRows($el)"
           x-on:blur="updateWhen($event)"
           hx-patch="<%= update_path %>"
           hx-trigger="save-when"
           hx-include="#<%= form_id %>"
           hx-swap="none"
-        ><%= scenario[:when].to_s.strip.presence %></span>
+        ><%= helpers.step_lines(scenario[:when]) %></div>
       </div>
       <div class="flex gap-2">
         <span class="flex-shrink-0 text-xs font-medium uppercase tracking-wider pt-0.5 w-10 text-purple-600 dark:text-purple-400">Then</span>
-        <span
+        <div
           class="flex-1 whitespace-pre-wrap text-stone-800 dark:text-white/90 leading-relaxed editable-placeholder is-editable"
           contenteditable="true"
           data-placeholder="Describe the expected outcome..."
+          x-on:input="markTableRows($el)"
           x-on:blur="updateThen($event)"
           hx-patch="<%= update_path %>"
           hx-trigger="save-then"
           hx-include="#<%= form_id %>"
           hx-swap="none"
-        ><%= scenario[:then].to_s.strip.presence %></span>
+        ><%= helpers.step_lines(scenario[:then]) %></div>
       </div>
     </div>
   </div>
