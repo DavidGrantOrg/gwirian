@@ -5,17 +5,14 @@ class McpController < ActionController::Base
   skip_before_action :verify_authenticity_token
 
   def handle
-    server = Mcp::Server.instance
+    server = Mcp::Server.build(server_context: build_server_context)
     body = request.body.read
-
-    Thread.current[:mcp_server_context] = build_server_context
     request_id = nil
 
     begin
       request_data = JSON.parse(body) rescue {}
       request_id = request_data["id"]
 
-      server.server_context = Thread.current[:mcp_server_context]
       result = server.handle_json(body)
       render json: result
     rescue JSON::ParserError => e
@@ -32,8 +29,6 @@ class McpController < ActionController::Base
         id: request_id,
         error: { code: -32000, message: "Internal error: #{e.message}" }
       }, status: :internal_server_error
-    ensure
-      Thread.current[:mcp_server_context] = nil
     end
   end
 
