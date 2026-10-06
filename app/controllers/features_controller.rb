@@ -177,7 +177,7 @@ class FeaturesController < ApplicationController
   end
 
   def feature_params
-    params.require(:feature).permit(:title, :description, :tag_list)
+    params.require(:feature).permit(:title, :description, :background, :tag_list)
   end
 
   def execution_params
