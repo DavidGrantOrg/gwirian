@@ -51,9 +51,9 @@ class Scenario < ApplicationRecord
   # Returns the Gherkin block for this scenario (Scenario: title + Given/When/Then lines).
   def to_gherkin
     lines = [ "Scenario: #{gherkin_escape_line(title)}" ]
-    lines << "  Given #{gherkin_escape_line(given)}" if given.present?
-    lines << "  When #{gherkin_escape_line(self.when)}" if self.when.present?
-    lines << "  Then #{gherkin_escape_line(self.then)}" if self.then.present?
+    { "Given" => given, "When" => self.when, "Then" => self.then }.each do |keyword, text|
+      GherkinSteps.lines(text, keyword).each { |line| lines << (line.empty? ? "" : "  #{line}") }
+    end
     lines.join("\n")
   end
 
