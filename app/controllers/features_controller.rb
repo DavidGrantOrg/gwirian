@@ -5,7 +5,7 @@ class FeaturesController < ApplicationController
 
   def index
     if params[:q].present?
-      @features = Feature.search_by_project(params[:q], @project.id).records.order(:title).includes(scenarios: :scenario_executions)
+      @features = Feature.search_by_project(params[:q], @project.id).order(:title).includes(scenarios: :scenario_executions)
     else
       @features = @project.features.order(:title).includes(scenarios: :scenario_executions)
     end

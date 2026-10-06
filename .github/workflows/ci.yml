@@ -53,6 +53,35 @@ jobs:
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
+  test_database_search:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install packages
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libyaml-dev pkg-config
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Setup test database
+        env:
+          RAILS_ENV: test
+        run: bin/rails db:test:prepare
+
+      # No Elasticsearch service, and its URL points at a closed port, so any request to it fails.
+      - name: Run RSpec tests with SEARCH_BACKEND=database
+        env:
+          RAILS_ENV: test
+          SEARCH_BACKEND: database
+          ELASTICSEARCH_URL: http://127.0.0.1:9
+        run: bundle exec rspec
+
   test:
     runs-on: ubuntu-latest
 

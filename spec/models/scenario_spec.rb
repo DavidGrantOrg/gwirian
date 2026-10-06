@@ -45,11 +45,65 @@ RSpec.describe Scenario, type: :model do
       expect(gherkin).to include("Then the cart shows one item")
     end
 
+    it "writes And before each later line of a step" do
+      scenario = create(:scenario, feature: feature, title: "Stock", given: "the store is open\nthe shelf is empty")
+      expect(scenario.to_gherkin).to eq("Scenario: Stock\n  Given the store is open\n  And the shelf is empty")
+    end
+
+    it "keeps a keyword typed at the start of a line" do
+      scenario = create(:scenario, feature: feature, title: "Stock", given: "Given the store is open\nBut the shelf is empty\n* the till is on")
+      expect(scenario.to_gherkin).to eq("Scenario: Stock\n  Given the store is open\n  But the shelf is empty\n  * the till is on")
+    end
+
+    it "indents a data table under its step, keeping its padding" do
+      scenario = create(:scenario, feature: feature, title: "Prices", given: "price changes list\n| SKU    | Change |\n| 100234 | +$1.50 |")
+      expect(scenario.to_gherkin).to eq("Scenario: Prices\n  Given price changes list\n    | SKU    | Change |\n    | 100234 | +$1.50 |")
+    end
+
+    it "indents a doc string under its step, keeping its own indentation and blank lines" do
+      scenario = create(:scenario, feature: feature, title: "Note", given: "the note reads\n\"\"\"\nline one\n\n  indented\n\"\"\"\nthe note is saved")
+      expect(scenario.to_gherkin).to eq(
+        "Scenario: Note\n  Given the note reads\n    \"\"\"\n    line one\n\n      indented\n    \"\"\"\n  And the note is saved"
+      )
+    end
+
     it "omits empty steps" do
       scenario = create(:scenario, feature: feature, title: "Minimal")
       scenario.update_columns(given: nil, when: nil, then: nil)
       scenario.reload
       expect(scenario.to_gherkin).to eq("Scenario: Minimal")
+    end
+  end
+
+  describe ".search_by_project with the database backend", search_backend: :database do
+    let(:project) { create(:project, workspace: create(:workspace)) }
+    let(:feature) { create(:feature, project: project, title: "Cart") }
+    let!(:add_item) do
+      create(:scenario, feature: feature, title: "Add item", given: "an empty basket", when: "the shopper adds a book", then: "the total is shown")
+    end
+    let!(:remove_item) do
+      create(:scenario, feature: feature, title: "Remove item", given: "a full basket", when: "the shopper removes a pen", then: "the basket is empty")
+    end
+
+    def search(query)
+      Scenario.search_by_project(query, project.id).to_a
+    end
+
+    it "matches the title, given, when and then" do
+      expect(search("add")).to eq([ add_item ])
+      expect(search("full")).to eq([ remove_item ])
+      expect(search("book")).to eq([ add_item ])
+      expect(search("total")).to eq([ add_item ])
+    end
+
+    it "requires every word to match, each in any field" do
+      expect(search("empty book")).to eq([ add_item ])
+    end
+
+    it "leaves out other projects' scenarios" do
+      other_feature = create(:feature, project: create(:project, workspace: project.workspace))
+      create(:scenario, feature: other_feature, title: "Add item")
+      expect(search("add")).to eq([ add_item ])
     end
   end
 end

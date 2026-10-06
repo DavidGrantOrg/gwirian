@@ -1,7 +1,8 @@
 class Scenario < ApplicationRecord
   include Elasticsearch::Model
-  include Elasticsearch::Model::Callbacks
+  include ElasticsearchIndexing
   include ElasticsearchQuerySanitizer
+  include DbSearchable
 
   belongs_to :feature
   has_many :steps, -> { order(:position) }, dependent: :destroy
@@ -50,9 +51,9 @@ class Scenario < ApplicationRecord
   # Returns the Gherkin block for this scenario (Scenario: title + Given/When/Then lines).
   def to_gherkin
     lines = [ "Scenario: #{gherkin_escape_line(title)}" ]
-    lines << "  Given #{gherkin_escape_line(given)}" if given.present?
-    lines << "  When #{gherkin_escape_line(self.when)}" if self.when.present?
-    lines << "  Then #{gherkin_escape_line(self.then)}" if self.then.present?
+    { "Given" => given, "When" => self.when, "Then" => self.then }.each do |keyword, text|
+      GherkinSteps.lines(text, keyword).each { |line| lines << (line.empty? ? "" : "  #{line}") }
+    end
     lines.join("\n")
   end
 
@@ -66,6 +67,13 @@ class Scenario < ApplicationRecord
   public
 
   def self.search_by_project(query, project_id, limit: 100)
+    unless Gwirian.elasticsearch?
+      return joins(:feature).where(features: { project_id: project_id })
+        .db_search(query, [ arel_table[:title], arel_table[:given], arel_table[:when], arel_table[:then] ])
+        .order(:title)
+        .limit([ limit, 1000 ].min)
+    end
+
     sanitized_query = sanitize_elasticsearch_query(query)
     search({
       size: [ limit, 1000 ].min, # Cap at 1000 to prevent DoS
@@ -87,31 +95,6 @@ class Scenario < ApplicationRecord
           ]
         }
       }
-    })
-  end
-
-  def self.search_by_feature(query, feature_id, limit: 100)
-    sanitized_query = sanitize_elasticsearch_query(query)
-    search({
-      size: [ limit, 1000 ].min,
-      query: {
-        bool: {
-          must: [
-            {
-              query_string: {
-                query: sanitized_query,
-                fields: [ "title^3", "given^2", "when^2", "then^2" ],
-                fuzziness: "AUTO",
-                default_operator: "AND",
-                escape: true
-              }
-            },
-            {
-              term: { feature_id: feature_id }
-            }
-          ]
-        }
-      }
-    })
+    }).records
   end
 end

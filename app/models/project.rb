@@ -85,7 +85,7 @@ class Project < ApplicationRecord
     entries
   end
 
-  # Search within this project for features and scenarios matching the query (Elasticsearch).
+  # Search within this project for features and scenarios matching the query.
   # @param [String] query search string
   # @param [Integer] limit max results per type (default 20)
   # @return [Array<Hash>] array of hashes with type, id, title, and type-specific fields
@@ -93,9 +93,9 @@ class Project < ApplicationRecord
     results = []
     return results if query.blank?
 
-    features = Feature.search_by_project(query, id, limit: limit).records
+    features = Feature.search_by_project(query, id, limit: limit)
                      .includes(scenarios: :scenario_executions)
-    scenarios = Scenario.search_by_project(query, id, limit: limit).records
+    scenarios = Scenario.search_by_project(query, id, limit: limit)
                        .includes(:feature, :scenario_executions)
 
     features.each do |f|

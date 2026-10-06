@@ -61,6 +61,26 @@ You can then plug all your SMTP settings from that provider into Gwirian via the
 
 You can find out more about all these settings in the [Rails Action Mailer documentation](https://guides.rubyonrails.org/action_mailer_basics.html#action-mailer-configuration).
 
+#### Background jobs
+
+Gwirian sends its email from background jobs, run by [Solid Queue](https://github.com/rails/solid_queue).
+In the Docker image, set `SOLID_QUEUE_IN_PUMA=1` so the web server also runs the job workers; without it, jobs are queued but nothing runs them, and sign-in emails never arrive:
+
+```sh
+docker run --env SOLID_QUEUE_IN_PUMA=1 ...
+```
+
+By default Solid Queue forks a separate process for its supervisor, dispatcher and each worker.
+On a small server you can save memory by running them as threads inside the web server's process instead, with `SOLID_QUEUE_MODE=async` alongside `SOLID_QUEUE_IN_PUMA=1`:
+
+```sh
+docker run --env SOLID_QUEUE_IN_PUMA=1 --env SOLID_QUEUE_MODE=async ...
+```
+
+Jobs stay in the database and are retried as before; only where they run changes.
+The job threads then share the database connection pool with web requests; with `RAILS_MAX_THREADS` unset, that is 3 web threads and a pool of 5 connections.
+Solid Queue recommends its default forked mode wherever memory allows.
+
 #### Base URL
 
 Gwirian needs to know the public URL of your instance so it can generate correct links in certain situations (like when sending emails).
@@ -69,6 +89,26 @@ Set `BASE_URL` to the full URL where your Gwirian instance is accessible:
 ```sh
 docker run --env BASE_URL=https://gwirian.example.com ...
 ```
+
+#### Invite-only sign-up
+
+By default anyone can sign up.
+To allow only people you invite, set `SIGNUP=invite_only`:
+
+```sh
+docker run --env SIGNUP=invite_only ...
+```
+
+The sign-in page then has no sign-up link, and signing up with an address Gwirian doesn't know creates no account and sends no email; it shows the same "check your email" page as signing in with an unknown address.
+Inviting someone to a workspace makes their address known, so they can sign in once invited.
+
+The first account on an invite-only instance has to be created from the command line:
+
+```sh
+docker exec <container> bin/rails runner 'User.create!(email_address: "you@example.com")'
+```
+
+Then sign in with that address as usual, create a workspace, and invite the others from it.
 
 #### Elasticsearch URL
 
@@ -79,3 +119,18 @@ docker run --env ELASTICSEARCH_URL=https://gwirian.example.com:9200 ...
 ```
 
 See `docker-compose.yml` for an example of how to use the Elasticsearch Docker image.
+
+#### Search without Elasticsearch
+
+On a small server you can run Gwirian without Elasticsearch by setting `SEARCH_BACKEND=database`:
+
+```sh
+docker run --env SEARCH_BACKEND=database ...
+```
+
+Saves then never contact Elasticsearch, and search runs as a database query instead.
+Every word you type must appear somewhere in a result (its title, description, tags, or a scenario's steps), ignoring case, and a word also matches part of a longer one.
+There is no stemming, typo tolerance or relevance ranking: results come in alphabetical order, and run history newest first.
+
+`ELASTICSEARCH_URL` is not needed in this mode.
+If you later switch back to Elasticsearch (remove `SEARCH_BACKEND` or set it to `elasticsearch`), run `bin/rails elasticsearch:reindex` once, because nothing was indexed while the database mode was on.

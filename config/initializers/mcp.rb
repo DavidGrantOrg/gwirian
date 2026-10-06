@@ -9,7 +9,4 @@ Rails.application.config.to_prepare do
       Rails.logger.info "MCP: #{data[:method]} - #{data[:duration]}s"
     }
   end
-
-   # Create our server instance and register tools
-   Mcp::Server.instance
 end
