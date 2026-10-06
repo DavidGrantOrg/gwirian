@@ -36,17 +36,15 @@ class Feature < ApplicationRecord
     lines = []
     lines << tag_list.map { |t| "@#{t}" }.join(" ") if tag_list.present?
     lines << "Feature: #{gherkin_escape_line(title)}"
-    if description.present?
-      gherkin_escape_description(description).each { |line| lines << "  #{line}" }
-      lines << ""
-    end
+    gherkin_escape_description(description).each { |line| lines << "  #{line}" } if description.present?
+    lines << ""
     if background.present?
       lines << "  Background:"
-      gherkin_escape_description(background).each { |line| lines << "    Given #{line}" }
+      GherkinSteps.lines(background, "Given").each { |line| lines << (line.empty? ? "" : "    #{line}") }
       lines << ""
     end
     scenarios.each do |scenario|
-      scenario.to_gherkin.split("\n").each { |sline| lines << "  #{sline}" }
+      scenario.to_gherkin.split("\n").each { |sline| lines << (sline.empty? ? "" : "  #{sline}") }
       lines << ""
     end
     lines.pop if lines.last == ""
