@@ -1,7 +1,8 @@
 class ScenarioExecution < ApplicationRecord
   include Elasticsearch::Model
-  include Elasticsearch::Model::Callbacks
+  include ElasticsearchIndexing
   include ElasticsearchQuerySanitizer
+  include DbSearchable
 
   belongs_to :scenario
   belongs_to :user
@@ -47,6 +48,14 @@ class ScenarioExecution < ApplicationRecord
   end
 
   def self.search_by_project(query, project_id, limit: 100)
+    unless Gwirian.elasticsearch?
+      columns = [ Feature.arel_table[:title], Scenario.arel_table[:title], User.arel_table[:email_address], arel_table[:status], arel_table[:notes] ]
+      return joins(:user, scenario: :feature).where(features: { project_id: project_id })
+        .db_search(query, columns, tags: true)
+        .order(executed_at: :desc)
+        .limit([ limit, 1000 ].min)
+    end
+
     sanitized_query = sanitize_elasticsearch_query(query)
     search({
       size: [ limit, 1000 ].min, # Cap at 1000 to prevent DoS
@@ -71,7 +80,7 @@ class ScenarioExecution < ApplicationRecord
       sort: [
         { executed_at: { order: "desc" } }
       ]
-    })
+    }).records
   end
 
   private

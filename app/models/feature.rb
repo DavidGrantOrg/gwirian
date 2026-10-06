@@ -1,7 +1,8 @@
 class Feature < ApplicationRecord
   include Elasticsearch::Model
-  include Elasticsearch::Model::Callbacks
+  include ElasticsearchIndexing
   include ElasticsearchQuerySanitizer
+  include DbSearchable
 
   belongs_to :project
   has_many :scenarios, -> { order(:position) }, dependent: :destroy
@@ -68,6 +69,13 @@ class Feature < ApplicationRecord
   public
 
   def self.search_by_project(query, project_id, limit: 100)
+    unless Gwirian.elasticsearch?
+      return where(project_id: project_id)
+        .db_search(query, [ arel_table[:title], arel_table[:description] ], tags: true)
+        .order(:title)
+        .limit([ limit, 1000 ].min)
+    end
+
     sanitized_query = sanitize_elasticsearch_query(query)
     search({
       size: [ limit, 1000 ].min, # Cap at 1000 to prevent DoS
@@ -89,6 +97,6 @@ class Feature < ApplicationRecord
           ]
         }
       }
-    })
+    }).records
   end
 end

@@ -52,4 +52,36 @@ RSpec.describe Scenario, type: :model do
       expect(scenario.to_gherkin).to eq("Scenario: Minimal")
     end
   end
+
+  describe ".search_by_project with the database backend", search_backend: :database do
+    let(:project) { create(:project, workspace: create(:workspace)) }
+    let(:feature) { create(:feature, project: project, title: "Cart") }
+    let!(:add_item) do
+      create(:scenario, feature: feature, title: "Add item", given: "an empty basket", when: "the shopper adds a book", then: "the total is shown")
+    end
+    let!(:remove_item) do
+      create(:scenario, feature: feature, title: "Remove item", given: "a full basket", when: "the shopper removes a pen", then: "the basket is empty")
+    end
+
+    def search(query)
+      Scenario.search_by_project(query, project.id).to_a
+    end
+
+    it "matches the title, given, when and then" do
+      expect(search("add")).to eq([ add_item ])
+      expect(search("full")).to eq([ remove_item ])
+      expect(search("book")).to eq([ add_item ])
+      expect(search("total")).to eq([ add_item ])
+    end
+
+    it "requires every word to match, each in any field" do
+      expect(search("empty book")).to eq([ add_item ])
+    end
+
+    it "leaves out other projects' scenarios" do
+      other_feature = create(:feature, project: create(:project, workspace: project.workspace))
+      create(:scenario, feature: other_feature, title: "Add item")
+      expect(search("add")).to eq([ add_item ])
+    end
+  end
 end

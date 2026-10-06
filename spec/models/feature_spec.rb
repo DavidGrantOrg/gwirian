@@ -42,4 +42,51 @@ RSpec.describe Feature, type: :model do
       expect(gherkin).to include("Then cart has one item")
     end
   end
+
+  describe ".search_by_project with the database backend", search_backend: :database do
+    let!(:checkout) { create(:feature, project: project, title: "Checkout", description: "Pay for the basket") }
+    let!(:login) { create(:feature, project: project, title: "Login", description: "Sign in with a code") }
+
+    def search(query, limit: 100)
+      Feature.search_by_project(query, project.id, limit: limit).to_a
+    end
+
+    it "matches a word in the title or description" do
+      expect(search("basket")).to eq([ checkout ])
+    end
+
+    it "requires every word to match" do
+      expect(search("basket pay")).to eq([ checkout ])
+      expect(search("basket code")).to eq([])
+    end
+
+    it "ignores case" do
+      expect(search("CHECKOUT")).to eq([ checkout ])
+    end
+
+    it "matches part of a word" do
+      expect(search("heck")).to eq([ checkout ])
+    end
+
+    it "matches a tag" do
+      login.update!(tag_list: "authentication")
+      expect(search("authentic")).to eq([ login ])
+    end
+
+    it "leaves out other projects' features" do
+      create(:feature, project: create(:project, workspace: project.workspace), title: "Checkout")
+      expect(search("checkout")).to eq([ checkout ])
+    end
+
+    it "treats % and _ as ordinary characters" do
+      half_off = create(:feature, project: project, title: "50% off", description: "snake_case")
+      create(:feature, project: project, title: "500 off", description: "snakeXcase")
+      expect(search("50%")).to eq([ half_off ])
+      expect(search("snake_case")).to eq([ half_off ])
+    end
+
+    it "returns at most limit features" do
+      expect(search("in", limit: 1).size).to eq(1)
+    end
+  end
 end

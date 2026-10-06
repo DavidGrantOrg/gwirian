@@ -79,3 +79,18 @@ docker run --env ELASTICSEARCH_URL=https://gwirian.example.com:9200 ...
 ```
 
 See `docker-compose.yml` for an example of how to use the Elasticsearch Docker image.
+
+#### Search without Elasticsearch
+
+On a small server you can run Gwirian without Elasticsearch by setting `SEARCH_BACKEND=database`:
+
+```sh
+docker run --env SEARCH_BACKEND=database ...
+```
+
+Saves then never contact Elasticsearch, and search runs as a database query instead.
+Every word you type must appear somewhere in a result (its title, description, tags, or a scenario's steps), ignoring case, and a word also matches part of a longer one.
+There is no stemming, typo tolerance or relevance ranking: results come in alphabetical order, and run history newest first.
+
+`ELASTICSEARCH_URL` is not needed in this mode.
+If you later switch back to Elasticsearch (remove `SEARCH_BACKEND` or set it to `elasticsearch`), run `bin/rails elasticsearch:reindex` once, because nothing was indexed while the database mode was on.

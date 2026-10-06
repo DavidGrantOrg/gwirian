@@ -39,7 +39,7 @@ module Mcp
 
           # Apply search if provided
           if search.present?
-            features = Feature.search_by_project(search, project_id, limit: 100).records
+            features = Feature.search_by_project(search, project_id, limit: 100)
           end
 
           success_result(features.map { |f| f.as_json(only: [ :id, :title, :description, :created_at, :updated_at, :project_id ]) })

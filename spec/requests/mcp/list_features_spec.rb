@@ -14,7 +14,7 @@ RSpec.describe "MCP list_features", type: :request do
     JSON.parse(json_response.dig("result", "content", 0, "text"))
   end
 
-  describe "with a search term" do
+  describe "with a search term", :elasticsearch do
     before { Feature.__elasticsearch__.create_index!(force: true) }
 
     let!(:checkout) { create(:feature, project: project, title: "Checkout", description: "Pay for the basket") }

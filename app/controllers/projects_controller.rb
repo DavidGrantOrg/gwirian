@@ -86,7 +86,7 @@ class ProjectsController < ApplicationController
 
     if params[:q].present?
       search_results = ScenarioExecution.search_by_project(params[:q], @project.id)
-      ids = search_results.records.map(&:id)
+      ids = search_results.map(&:id)
       if ids.any?
         executions = @project.scenario_executions
           .where(id: ids)
