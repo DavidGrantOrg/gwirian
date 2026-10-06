@@ -215,6 +215,13 @@ This task will:
 
 > **Note**: Make sure Elasticsearch is running before executing this command (`docker-compose up -d`).
 
+### Running without Elasticsearch
+
+Set `SEARCH_BACKEND=database` to search with a database query instead of Elasticsearch: saves no longer index, and Elasticsearch need not be running.
+Search then matches every word as a case-insensitive substring of a title, description, tag or scenario step, without stemming, typo tolerance or ranking.
+Run `bin/rails elasticsearch:reindex` when switching back to Elasticsearch.
+See [docs/docker-deployment.md](docs/docker-deployment.md#search-without-elasticsearch).
+
 ## Testing
 
 Gwirian uses both RSpec and Rails' built-in test framework:
