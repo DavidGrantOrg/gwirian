@@ -62,6 +62,7 @@ module Mcp
 
           result = feature.as_json(only: [ :id, :title, :description, :background, :created_at, :updated_at, :project_id ])
           result["tag_list"] = feature.tag_list
+          result.merge!(feature_folder_fields(feature))
           result["executions"] = {
             summary: execution_summary,
             recent: recent_executions

@@ -32,7 +32,9 @@ RSpec.describe "MCP list_features", type: :request do
           "description" => "Pay for the basket",
           "project_id" => project.id,
           "created_at" => checkout.created_at.as_json,
-          "updated_at" => checkout.updated_at.as_json
+          "updated_at" => checkout.updated_at.as_json,
+          "folder_id" => nil,
+          "folder_path" => nil
         }
       ])
     end

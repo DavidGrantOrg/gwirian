@@ -13,11 +13,36 @@ class Folder < ApplicationRecord
   # The foreign keys have no ON DELETE, so the database refuses a delete that skips this.
   before_destroy :move_contents_to_parent
 
+  PATH_SEPARATOR = " › "
+
+  # Loads every folder in one query, each with its parent set from the same rows so #path
+  # needs no more, and returns them depth first: a folder, then its sub-folders, siblings
+  # by name.
+  def self.in_tree_order(folders)
+    all = folders.to_a
+    by_id = all.index_by(&:id)
+    all.each { |folder| folder.association(:parent).target = by_id[folder.parent_id] }
+    children = all.group_by(&:parent_id)
+    ordered = []
+    visit = lambda do |parent_id|
+      (children[parent_id] || []).sort_by { |folder| folder.name.downcase }.each do |folder|
+        ordered << folder
+        visit.call(folder.id)
+      end
+    end
+    visit.call(nil)
+    ordered
+  end
+
   # The folder and its parents, from the top of the project down.
   def path
     folders = [ self ]
     folders.unshift(folders.first.parent) while folders.first.parent
     folders
+  end
+
+  def path_label
+    path.map(&:name).join(PATH_SEPARATOR)
   end
 
   private

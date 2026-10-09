@@ -3,6 +3,20 @@
 module Mcp
   module Tools
     class BaseTool < MCP::Tool
+      # The default for an argument where an explicit null means something (the project's
+      # top level), so leaving the argument out can mean "leave it as it is".
+      NOT_GIVEN = Object.new.freeze
+
+      def self.folder_json(folder)
+        { id: folder.id, name: folder.name, parent_id: folder.parent_id, path: folder.path_label }
+      end
+
+      # folders_by_id, from Folder.in_tree_order, saves a lookup per feature in a list.
+      def self.feature_folder_fields(feature, folders_by_id = nil)
+        folder = folders_by_id ? folders_by_id[feature.folder_id] : feature.folder
+        { "folder_id" => feature.folder_id, "folder_path" => folder&.path_label }
+      end
+
       def self.authorize!(user, action, subject)
         ability = Ability.new(user)
         ability.authorize!(action, subject)
