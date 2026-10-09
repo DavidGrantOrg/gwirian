@@ -161,6 +161,26 @@
             </div>
           </div>
 
+          <!-- Theme -->
+          <div
+            class="px-3 py-1.5 flex items-center justify-between border-b border-stone-100 dark:border-white/10"
+            x-data="{ theme: window.gwirianTheme.get() }"
+          >
+            <span class="text-sm text-stone-700 dark:text-white/90">Theme</span>
+            <div class="flex rounded bg-stone-100 dark:bg-white/5 p-0.5" role="radiogroup" aria-label="Theme">
+              <% [ %w[system System], %w[light Light], %w[dark Dark] ].each do |value, label| %>
+                <button
+                  type="button"
+                  role="radio"
+                  @click="theme = '<%= value %>'; window.gwirianTheme.set(theme)"
+                  :aria-checked="theme === '<%= value %>'"
+                  class="px-2 py-0.5 text-xs rounded cursor-pointer transition-colors text-stone-600 dark:text-white/70"
+                  :class="{ 'bg-white dark:bg-white/15 text-stone-900 dark:text-white shadow-sm': theme === '<%= value %>' }"
+                ><%= label %></button>
+              <% end %>
+            </div>
+          </div>
+
           <!-- Log out -->
           <div class="py-1">
             <%= form_with url: session_path, method: :delete, local: true, class: "block" do |f| %>
