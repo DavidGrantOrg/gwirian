@@ -1,4 +1,10 @@
-<div class="relative" x-data="{ open: false, moving: false }" x-effect="if (!open) moving = false">
+<%# Each card keeps a transform from animate-in-up, so each is its own stacking context and
+    later cards paint over this menu unless the open card is raised above them. %>
+<div
+  class="relative"
+  x-data="{ open: false, moving: false }"
+  x-effect="if (!open) moving = false; $el.closest('[data-feature-card]')?.classList.toggle('z-30', open)"
+>
   <button
     type="button"
     class="<%= button_classes %> absolute top-0 right-0 mt-2 mr-2"
