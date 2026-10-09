@@ -1,0 +1,6 @@
+<%= render Folders::HeadingComponent.new(project: @project, folder: @folder, folders: folders, error: error) %>
+<% if saved %>
+  <div id="folder-tree" hx-swap-oob="true">
+    <%= render Folders::TreeComponent.new(project: @project, folders: folders, selected: folders.find { |f| f.id == @folder.id }) %>
+  </div>
+<% end %>

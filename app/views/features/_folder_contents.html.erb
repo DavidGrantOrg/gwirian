@@ -2,9 +2,10 @@
     the top-level folders, then the unfiled features. %>
 <% subfolders = folders.select { |f| f.parent_id == folder&.id } %>
 <% if folder %>
-  <%= render Folders::BreadcrumbComponent.new(project: project, folder: folder) %>
+  <%= render Folders::HeadingComponent.new(project: project, folder: folder, folders: folders, focus: focus_heading) %>
+<% else %>
+  <h2 class="text-2xl font-bold tracking-tight mb-4 text-stone-800 dark:text-white/90"><%= project.name %></h2>
 <% end %>
-<h2 class="text-2xl font-bold tracking-tight mb-4 text-stone-800 dark:text-white/90"><%= folder ? folder.name : project.name %></h2>
 
 <% if subfolders.any? %>
   <ul aria-label="Sub-folders" class="mb-6 divide-y divide-stone-100 dark:divide-white/5 border border-stone-200 dark:border-white/10 rounded-lg">

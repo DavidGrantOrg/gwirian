@@ -36,6 +36,7 @@ Rails.application.routes.draw do
 
   # Workspace-scoped routes (middleware extracts slug and sets Current.workspace)
   resources :projects do
+    resources :folders, only: [ :create, :update, :destroy ]
     resources :features, only: [ :index, :show, :create, :update, :destroy ] do
       member do
         post :add_tag

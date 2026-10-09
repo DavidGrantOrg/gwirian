@@ -9,6 +9,7 @@ class FeaturesController < ApplicationController
       @folder = @folders.find { |folder| folder.id.to_s == params[:folder].to_s }
       raise ActiveRecord::RecordNotFound, "Folder not found" unless @folder
     end
+    @focus_heading = @folder.present? && flash[:new_folder] == @folder.id
 
     if params[:q].present?
       @features = Feature.search_by_project(params[:q], @project.id).order(:title).includes(scenarios: :scenario_executions)
