@@ -31,6 +31,7 @@ class Api::V1::ApiController < ActionController::Base
     case model_name
     when "Project" then "Project not found"
     when "Feature" then "Feature not found"
+    when "Folder" then "Folder not found"
     when "Scenario" then "Scenario not found"
     when "ScenarioExecution" then "Scenario execution not found"
     else exception.message

@@ -58,7 +58,11 @@ class Feature < ApplicationRecord
   private
 
   def folder_in_same_project
-    errors.add(:folder, "must be in the same project") if folder && folder.project_id != project_id
+    if folder_id && folder.nil?
+      errors.add(:folder, "must exist")
+    elsif folder && folder.project_id != project_id
+      errors.add(:folder, "must be in the same project")
+    end
   end
 
   def gherkin_escape_line(text)

@@ -1,5 +1,5 @@
 class Api::V1::FeaturesController < Api::V1::ApiController
-  JSON_FIELDS = [ :id, :title, :description, :background, :created_at, :updated_at, :project_id ].freeze
+  JSON_FIELDS = [ :id, :title, :description, :background, :created_at, :updated_at, :project_id, :folder_id ].freeze
 
   before_action :set_feature, only: [ :show, :update, :destroy ]
 
@@ -52,6 +52,6 @@ class Api::V1::FeaturesController < Api::V1::ApiController
   end
 
   def feature_params
-    params.require(:feature).permit(:title, :description, :background, :tag_list)
+    params.require(:feature).permit(:title, :description, :background, :tag_list, :folder_id)
   end
 end

@@ -31,7 +31,11 @@ class Folder < ApplicationRecord
   end
 
   def parent_in_same_project
-    errors.add(:parent, "must be in the same project") if parent && parent.project_id != project_id
+    if parent_id && parent.nil?
+      errors.add(:parent, "must exist")
+    elsif parent && parent.project_id != project_id
+      errors.add(:parent, "must be in the same project")
+    end
   end
 
   def parent_outside_own_subtree
