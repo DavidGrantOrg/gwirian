@@ -8,6 +8,7 @@ Gwirian empowers development teams to manage their BDD features with ease. Creat
 
 - [What Gwirian Does](#what-gwirian-does)
 - [Key Features](#key-features)
+- [Folders](#folders)
 - [Architecture Overview](#architecture-overview)
 - [Technical Stack](#technical-stack)
 - [Requirements](#requirements)
@@ -49,6 +50,7 @@ Experience a lightning-fast interface built with the latest web technologies. Na
 - **Workspaces**: Organize teams and projects into separate workspaces
 - **Projects**: Group related features within a workspace
 - **Features**: Define BDD features with descriptions and backgrounds
+- **Folders**: Optionally file a project's features in folders and sub-folders
 - **Scenarios**: Create scenarios with Given/When/Then structure
 - **Steps**: Define detailed steps for each scenario
 - **Executions**: Track scenario execution status and history
@@ -58,6 +60,19 @@ Experience a lightning-fast interface built with the latest web technologies. Na
 - **Keyboard-first navigation**: G-nav (G + letter) and shortcuts overlay (?); prev/next feature (G P / G N)
 - **API Access**: Workspace-scoped API tokens for programmatic access
 - **MCP Integration**: Model Context Protocol server for AI assistant integration
+
+## Folders
+
+Folders are optional: a project without any looks and behaves as it always has.
+
+- **Features page**: **New folder** creates a folder inside the one you are looking at. Once a project has a folder, the page shows the folder tree on the left, with the project as its root, and the open folder's sub-folders and features on the right. `?folder=<id>` in the URL holds the open folder. Search still covers the whole project, and each result shows its folder.
+- **A folder**: its name in the heading is edited in place. **Move to…** puts it inside another folder or back at the top, never inside itself. **Delete folder** keeps its features and sub-folders, which move up into its parent.
+- **A feature**: the **Folder** drop-down in its header, or **Move to…** in its card's menu, moves it; Unfiled means no folder. Its page shows a breadcrumb of its folders.
+- **REST API**: `/api/v1/projects/:project_id/folders` lists, shows, creates, updates and deletes folders; `parent_id: null` is the top of the project. Features carry `folder_id`, where `null` is Unfiled.
+- **MCP**: `list_folders`, `create_folder`, `update_folder` and `delete_folder`, and `folder_id` on the feature tools (see [docs/mcp.md](docs/mcp.md)).
+- **BDD export**: a foldered feature's file goes in its folder's directories (`ordering/suggested-orders/reorder.feature`); unfiled features stay at the top.
+
+Folders are identified by id everywhere, so renaming or moving one changes nothing for a caller.
 
 ## Architecture Overview
 
@@ -70,6 +85,7 @@ Workspace
   ├── Workspace Members (users with roles)
   └── Projects
       ├── Project Members (email-based access)
+      ├── Folders (optional; each may hold sub-folders and features)
       └── Features
           ├── Tags
           └── Scenarios
