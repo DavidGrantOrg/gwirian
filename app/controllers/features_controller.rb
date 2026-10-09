@@ -4,10 +4,16 @@ class FeaturesController < ApplicationController
   before_action :set_feature, only: [ :show, :update, :destroy, :add_tag, :remove_tag, :start_execution, :select_scenarios, :execute_scenarios ]
 
   def index
+    @folders = Folder.in_tree_order(@project.folders)
+    if params[:folder].present?
+      @folder = @folders.find { |folder| folder.id.to_s == params[:folder].to_s }
+      raise ActiveRecord::RecordNotFound, "Folder not found" unless @folder
+    end
+
     if params[:q].present?
       @features = Feature.search_by_project(params[:q], @project.id).order(:title).includes(scenarios: :scenario_executions)
     else
-      @features = @project.features.order(:title).includes(scenarios: :scenario_executions)
+      @features = @project.features.where(folder: @folder).order(:title).includes(scenarios: :scenario_executions)
     end
   end
 
@@ -62,8 +68,10 @@ class FeaturesController < ApplicationController
     @feature.destroy
 
     if htmx_request?
-      @features = @project.features.order(:title)
-      render partial: "features/features", locals: { features: @features, project: @project, notice: "Feature deleted successfully" }
+      @features = @project.features.where(folder_id: @feature.folder_id).order(:title)
+      render partial: "features/features", locals: {
+        features: @features, project: @project, in_folders: @project.folders.exists?, notice: "Feature deleted successfully"
+      }
     else
       redirect_to project_features_path(@project), notice: "Feature deleted successfully"
     end

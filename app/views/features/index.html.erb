@@ -1,5 +1,5 @@
 <% content_for :title, "Features - #{@project.name}" %>
-<div class="max-w-3xl mx-auto px-4 py-12">
+<div class="<%= @folders.any? ? "max-w-6xl" : "max-w-3xl" %> mx-auto px-4 py-12">
   <!-- Header -->
   <%= render Shared::PageHeaderComponent.new(
     title: "Features",
@@ -12,23 +12,31 @@
     <% end %>
   <% end %>
 
-  <!-- Search Bar -->
-  <div class="mb-6">
-    <%= render Shared::SearchInputComponent.new(
-      url: project_features_path(@project),
-      target_id: "features-container",
-      placeholder: "Search features by title, description, or tags...",
-      value: params[:q]
-    ) %>
-  </div>
-
-  <!-- Features List with Search Results Info -->
-  <div id="features-container">
-    <% if params[:q].present? %>
-      <p class="mb-4 text-sm text-stone-500 dark:text-white/50">
-        Showing results for "<span class="font-medium text-stone-700 dark:text-white/70"><%= params[:q] %></span>"
-      </p>
-    <% end %>
-    <%= render partial: "features/features", locals: { features: @features, project: @project } %>
-  </div>
+  <% if @folders.any? %>
+    <div class="flex flex-col md:flex-row gap-8">
+      <aside class="md:w-64 shrink-0">
+        <%= render Folders::TreeComponent.new(project: @project, folders: @folders, selected: @folder) %>
+      </aside>
+      <div class="flex-1 min-w-0">
+        <%= render "features/search", folder: @folder %>
+        <div id="features-container">
+          <% if params[:q].present? %>
+            <%= render "features/search_info" %>
+            <%= render partial: "features/features", locals: { features: @features, project: @project, folders_by_id: @folders.index_by(&:id) } %>
+          <% else %>
+            <%= render "features/folder_contents", folder: @folder, folders: @folders, features: @features, project: @project %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <%= render "features/search", folder: nil %>
+    <!-- Features List with Search Results Info -->
+    <div id="features-container">
+      <% if params[:q].present? %>
+        <%= render "features/search_info" %>
+      <% end %>
+      <%= render partial: "features/features", locals: { features: @features, project: @project } %>
+    </div>
+  <% end %>
 </div>
