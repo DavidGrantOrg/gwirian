@@ -137,6 +137,13 @@ RSpec.describe "Folder actions on the features page", type: :request do
         expect(crumbs).to eq([ "Liquor Lodge", "Catalog", "Suggested orders" ])
       end
 
+      it "opens the folder in its new place when the page's hx-boost sends the form" do
+        patch "#{folders_path}/#{suggested.id}", params: { folder: { parent_id: catalog.id } },
+          headers: { "HX-Request" => "true", "HX-Boosted" => "true" }
+
+        expect(response).to redirect_to("#{features_path}?folder=#{suggested.id}")
+      end
+
       it "moves the folder to the top level" do
         patch "#{folders_path}/#{suggested.id}", params: { folder: { parent_id: "" } }
         follow_redirect!

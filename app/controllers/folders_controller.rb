@@ -16,14 +16,15 @@ class FoldersController < ApplicationController
     redirect_to project_features_path(@project, folder: folder.id)
   end
 
-  # From the heading (htmx), a rename: answers with the heading and, out of band, the tree.
-  # From Move to… (a plain form), a move: opens the folder in its new place.
+  # From the heading (hx-patch), a rename: answers with the heading and, out of band, the
+  # tree. From Move to… (a plain form, which the body's hx-boost sends with HX-Boosted), a
+  # move: opens the folder in its new place.
   def update
     authorize! :update, @folder
 
     saved = @folder.update(folder_params)
     error = saved ? nil : @folder.errors.full_messages.to_sentence
-    if htmx_request?
+    if htmx_request? && request.headers["HX-Boosted"].blank?
       @folder.restore_attributes unless saved
       # 200 even when refused, so htmx swaps the heading and its error in like any response.
       render :update, layout: false, locals: { folders: Folder.in_tree_order(@project.folders), error: error, saved: saved }
