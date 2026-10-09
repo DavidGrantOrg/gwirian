@@ -28,7 +28,7 @@ module Shared
     TREND_ICONS = {
       up: { icon: "↑", color: "text-emerald-500" },
       down: { icon: "↓", color: "text-red-500" },
-      stable: { icon: "→", color: "text-stone-400" }
+      stable: { icon: "→", color: "text-stone-500" }
     }.freeze
 
     def initialize(value:, label:, trend: nil, trend_value: nil, color: :default, suffix: nil, trend_previous_value: nil, trend_period_label: nil, hero: false)

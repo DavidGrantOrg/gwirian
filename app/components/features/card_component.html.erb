@@ -3,9 +3,9 @@
     <%= render Features::DropdownMenuComponent.new(feature: feature, project: project, folders: folders) %>
   <% end %>
   <%= link_to project_feature_path(project, feature), class: "block" do %>
-    <div class="p-4 rounded-lg transition-all duration-200 hover:bg-stone-50 dark:hover:bg-white/5 border border-stone-200 dark:border-white/10 hover:border-stone-300 dark:hover:border-white/20 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]">
+    <div class="p-4 rounded-lg transition-all duration-200 hover:bg-stone-50 dark:hover:bg-white/5 border border-stone-200 dark:border-white/10 hover:border-stone-300 dark:hover:border-white/20 hover:shadow-sm active:scale-[0.99]">
       <% if folder_path %>
-        <p class="text-xs mb-1 text-stone-400 dark:text-white/40" aria-label="Folder"><%= folder_path %></p>
+        <p class="text-xs mb-1 text-stone-500 dark:text-white/55" aria-label="Folder"><%= folder_path %></p>
       <% end %>
       <h3 class="text-sm font-semibold mb-1 text-stone-800 dark:text-white/90 group-hover:text-stone-900 dark:group-hover:text-white transition-colors">
         <%= feature.title %>
@@ -15,7 +15,7 @@
           <%= feature.description %>
         </p>
       <% else %>
-        <p class="text-sm italic mb-3 text-stone-400 dark:text-white/30">
+        <p class="text-sm italic mb-3 text-stone-500 dark:text-white/45">
           No description
         </p>
       <% end %>
@@ -72,7 +72,7 @@
         </div>
       <% else %>
         <div class="mt-4 pt-3 border-t border-stone-100 dark:border-white/5">
-          <p class="text-xs text-stone-400 dark:text-white/30 italic">No scenarios yet</p>
+          <p class="text-xs text-stone-500 dark:text-white/45 italic">No scenarios yet</p>
         </div>
       <% end %>
     </div>

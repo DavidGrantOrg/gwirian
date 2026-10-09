@@ -6,6 +6,9 @@
 /* Native controls draw their own parts, such as a select's option list, light unless told otherwise. */
 [data-theme="dark"] { color-scheme: dark; }
 
+/* 17px root, so text-sm reads at about 15px and text-xs at about 13px. */
+html { font-size: 106.25%; }
+
 /* Alpine.js cloak - hide elements until Alpine initializes */
 [x-cloak] { display: none !important; }
 
@@ -21,12 +24,15 @@
   --duration-entrance: 400ms;
 
   /* Neutral aliases - warmer stone palette */
-  --color-bg: var(--color-stone-50);
+  /* The page is off-white so white cards and panels stand out from it and the screen glares less. */
+  --color-bg: rgb(250, 249, 247);
+  --color-bg-dark: rgb(25, 25, 25);
   --color-surface: var(--color-white);
   --color-border: rgba(55, 53, 47, 0.09);
   --color-border-dark: rgba(255, 255, 255, 0.13);
   --color-text: rgb(55, 53, 47);
-  --color-text-dark: rgba(255, 255, 255, 0.9);
+  /* Below 0.9 so body text does not glow against the near-black page. */
+  --color-text-dark: rgba(255, 255, 255, 0.84);
   --color-muted: rgb(120, 119, 116);
   --color-muted-dark: rgba(255, 255, 255, 0.6);
 
@@ -134,21 +140,21 @@
 
   .editable-placeholder:empty::before {
     content: attr(data-placeholder);
-    color: rgba(55, 53, 47, 0.4);
+    color: rgba(55, 53, 47, 0.6);
     pointer-events: none;
   }
 
   .editable-placeholder:focus:empty::before {
-    color: rgba(55, 53, 47, 0.3);
+    color: rgba(55, 53, 47, 0.45);
   }
 
   :where([data-theme="dark"]) {
     .editable-placeholder:empty::before {
-      color: rgba(255, 255, 255, 0.3);
+      color: rgba(255, 255, 255, 0.45);
     }
 
     .editable-placeholder:focus:empty::before {
-      color: rgba(255, 255, 255, 0.25);
+      color: rgba(255, 255, 255, 0.35);
     }
   }
 
@@ -284,16 +290,18 @@
    * Body and Layout
    * ======================================== */
 
+  /* Plus Jakarta Sans's space is 0.14em, narrow enough that words run together at 14px. */
   .body {
     @apply min-h-screen;
-    background: rgb(255, 255, 255);
+    background: var(--color-bg);
     color: rgb(55, 53, 47);
+    word-spacing: 0.1em;
   }
 
   :where([data-theme="dark"]) {
     .body {
-      background: rgb(25, 25, 25);
-      color: rgba(255, 255, 255, 0.9);
+      background: var(--color-bg-dark);
+      color: var(--color-text-dark);
     }
   }
 
@@ -303,12 +311,13 @@
 
   .auth-layout {
     @apply min-h-screen;
-    background: rgb(255, 255, 255);
+    background: var(--color-bg);
+    word-spacing: 0.1em;
   }
 
   :where([data-theme="dark"]) {
     .auth-layout {
-      background: rgb(25, 25, 25);
+      background: var(--color-bg-dark);
     }
   }
 
@@ -571,19 +580,18 @@
     @apply p-4;
     background: rgb(255, 255, 255);
     border-radius: 4px;
-    box-shadow: inset 0 0 0 1px rgba(55, 53, 47, 0.09);
-    transition: background-color var(--duration-state) var(--ease-out-quart), transform var(--duration-state) var(--ease-out-quart), box-shadow var(--duration-state) var(--ease-out-quart);
+    box-shadow: inset 0 0 0 1px rgba(55, 53, 47, 0.16);
+    transition: background-color var(--duration-state) var(--ease-out-quart), box-shadow var(--duration-state) var(--ease-out-quart);
   }
 
   .card:hover {
     background: rgba(55, 53, 47, 0.03);
-    transform: scale(1.01);
   }
 
   :where([data-theme="dark"]) {
     .card {
       background: rgb(37, 37, 37);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
     }
 
     .card:hover {
@@ -625,7 +633,7 @@
   }
 
   .input::placeholder {
-    color: rgb(180, 180, 178);
+    color: rgb(135, 134, 131);
   }
 
   .input:focus {
@@ -640,7 +648,7 @@
     }
 
     .input::placeholder {
-      color: rgba(255, 255, 255, 0.3);
+      color: rgba(255, 255, 255, 0.45);
     }
 
     .input:focus {
@@ -856,13 +864,13 @@
     @apply min-w-full text-sm;
     background: white;
     border-radius: 4px;
-    box-shadow: inset 0 0 0 1px rgba(55, 53, 47, 0.09);
+    box-shadow: inset 0 0 0 1px rgba(55, 53, 47, 0.16);
   }
 
   :where([data-theme="dark"]) {
     .table {
       background: rgb(37, 37, 37);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
     }
   }
 
