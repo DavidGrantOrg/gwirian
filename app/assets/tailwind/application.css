@@ -3,6 +3,9 @@
 /* Dark follows the data-theme the head script sets from the theme toggle, which falls back to the OS setting. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* Native controls draw their own parts, such as a select's option list, light unless told otherwise. */
+[data-theme="dark"] { color-scheme: dark; }
+
 /* Alpine.js cloak - hide elements until Alpine initializes */
 [x-cloak] { display: none !important; }
 
