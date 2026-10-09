@@ -9,8 +9,20 @@
   </div>
 
   <% if has_features? %>
+    <% groups.each do |group| %>
+    <% if group.label %>
+      <h4 class="px-5 pt-4 pb-1 text-xs font-medium uppercase tracking-wide text-stone-500 dark:text-white/55"><%= group.label %></h4>
+    <% end %>
     <div class="divide-y divide-stone-100 dark:divide-stone-800">
-      <% features_with_stats.each do |fs| %>
+      <% group.features.each do |fs| %>
+        <% unless runs_recorded? %>
+        <a href="<%= feature_link(fs.feature) %>" class="flex items-center justify-between gap-4 px-5 py-2 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
+          <span class="text-sm text-stone-900 dark:text-white/90 truncate"><%= fs.feature.title %></span>
+          <span class="text-xs text-stone-500 dark:text-stone-400 flex-shrink-0">
+            <%= fs.total %> <%= t("dashboard.feature_coverage.scenarios") %>
+          </span>
+        </a>
+        <% else %>
         <a href="<%= feature_link(fs.feature) %>" class="block px-5 py-3 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
           <div class="flex items-center justify-between gap-4 mb-2">
             <div class="flex items-center gap-2 min-w-0">
@@ -65,8 +77,10 @@
             </div>
           <% end %>
         </a>
+        <% end %>
       <% end %>
     </div>
+    <% end %>
   <% else %>
     <div class="px-5 py-12 text-center">
       <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-stone-100 dark:bg-stone-800 mb-3">

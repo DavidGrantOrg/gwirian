@@ -50,8 +50,23 @@ module Dashboard
       end.sort_by { |fs| [ -fs.failed, -fs.pending, fs.feature.title ] }
     end
 
+    Group = Struct.new(:label, :features, keyword_init: true)
+
+    # Features with no folder come first, under no heading, then each folder's in tree order.
+    def groups
+      by_folder = features_with_stats.group_by { |fs| fs.feature.folder_id }
+      filed = Folder.in_tree_order(project.folders).filter_map do |folder|
+        Group.new(label: folder.path_label, features: by_folder[folder.id]) if by_folder.key?(folder.id)
+      end
+      [ Group.new(label: nil, features: by_folder.fetch(nil, [])), *filed ].reject { |group| group.features.empty? }
+    end
+
     def has_features?
       features_with_stats.any?
+    end
+
+    def runs_recorded?
+      project.runs_recorded?
     end
 
     def feature_link(feature)
