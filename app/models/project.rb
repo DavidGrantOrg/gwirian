@@ -2,6 +2,9 @@ class Project < ApplicationRecord
   belongs_to :workspace
   has_many :project_members, dependent: :destroy
   has_many :features, dependent: :destroy
+  # After features, so no feature still points at a folder; one DELETE, so parent links
+  # between the folders don't matter.
+  has_many :folders, dependent: :delete_all
   has_many :scenarios, through: :features
   has_many :scenario_executions, through: :scenarios
 

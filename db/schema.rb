@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_22_130000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_09_120000) do
   create_table "features", force: :cascade do |t|
     t.string "title"
     t.text "description"
@@ -18,7 +18,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_22_130000) do
     t.datetime "updated_at", null: false
     t.integer "project_id", null: false
     t.text "background"
+    t.integer "folder_id"
+    t.index ["folder_id"], name: "index_features_on_folder_id"
     t.index ["project_id"], name: "index_features_on_project_id"
+  end
+
+  create_table "folders", force: :cascade do |t|
+    t.integer "project_id", null: false
+    t.integer "parent_id"
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "project_id, COALESCE(parent_id, 0), lower(name)", name: "index_folders_on_project_parent_and_name", unique: true
+    t.index ["parent_id"], name: "index_folders_on_parent_id"
+    t.index ["project_id"], name: "index_folders_on_project_id"
   end
 
   create_table "login_histories", force: :cascade do |t|
@@ -178,7 +191,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_22_130000) do
     t.index ["slug"], name: "index_workspaces_on_slug", unique: true
   end
 
+  add_foreign_key "features", "folders"
   add_foreign_key "features", "projects"
+  add_foreign_key "folders", "folders", column: "parent_id"
+  add_foreign_key "folders", "projects"
   add_foreign_key "login_histories", "users"
   add_foreign_key "magic_links", "users"
   add_foreign_key "project_members", "projects"

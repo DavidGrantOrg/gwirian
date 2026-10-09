@@ -5,12 +5,15 @@ class Feature < ApplicationRecord
   include DbSearchable
 
   belongs_to :project
+  # No folder means the feature is unfiled, at the top of the project.
+  belongs_to :folder, optional: true
   has_many :scenarios, -> { order(:position) }, dependent: :destroy
   has_many :scenario_executions, through: :scenarios
   acts_as_taggable_on :tags
 
   validates :title, presence: true, length: { maximum: 255 }
   validates :description, length: { maximum: 1000 }, allow_blank: true
+  validate :folder_in_same_project
 
   settings index: { number_of_shards: 1 } do
     mappings dynamic: "false" do
@@ -53,6 +56,10 @@ class Feature < ApplicationRecord
   end
 
   private
+
+  def folder_in_same_project
+    errors.add(:folder, "must be in the same project") if folder && folder.project_id != project_id
+  end
 
   def gherkin_escape_line(text)
     return "" if text.blank?

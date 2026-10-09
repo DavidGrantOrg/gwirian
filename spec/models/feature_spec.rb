@@ -5,6 +5,22 @@ require "rails_helper"
 RSpec.describe Feature, type: :model do
   let(:project) { create(:project, workspace: create(:workspace)) }
 
+  describe "folder" do
+    it "may be empty" do
+      expect(build(:feature, project: project, folder: nil)).to be_valid
+    end
+
+    it "accepts a folder in the same project" do
+      expect(build(:feature, project: project, folder: create(:folder, project: project))).to be_valid
+    end
+
+    it "refuses a folder from another project" do
+      feature = build(:feature, project: project, folder: create(:folder, project: create(:project)))
+      expect(feature).not_to be_valid
+      expect(feature.errors[:folder]).to include("must be in the same project")
+    end
+  end
+
   describe "#to_gherkin" do
     it "returns Feature line with title" do
       feature = create(:feature, project: project, title: "User authentication")
