@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Dark follows the data-theme the head script sets from the theme toggle, which falls back to the OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* Alpine.js cloak - hide elements until Alpine initializes */
 [x-cloak] { display: none !important; }
 
@@ -136,7 +139,7 @@
     color: rgba(55, 53, 47, 0.3);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .editable-placeholder:empty::before {
       color: rgba(255, 255, 255, 0.3);
     }
@@ -156,7 +159,7 @@
     color: rgb(55, 53, 47);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .badge {
       background: rgba(255, 255, 255, 0.1);
       color: rgba(255, 255, 255, 0.8);
@@ -180,7 +183,7 @@
   .badge-tag-7 { background: rgba(253, 236, 200, 0.5); color: rgb(64, 44, 27); }
   .badge-tag-8 { background: rgba(227, 226, 224, 0.5); color: rgb(50, 48, 44); }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .badge-tag-1 { background: rgba(29, 59, 78, 0.5); color: rgb(162, 206, 232); }
     .badge-tag-2 { background: rgba(60, 45, 73, 0.5); color: rgb(198, 175, 214); }
     .badge-tag-3 { background: rgba(36, 61, 48, 0.5); color: rgb(163, 211, 180); }
@@ -284,7 +287,7 @@
     color: rgb(55, 53, 47);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .body {
       background: rgb(25, 25, 25);
       color: rgba(255, 255, 255, 0.9);
@@ -300,7 +303,7 @@
     background: rgb(255, 255, 255);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .auth-layout {
       background: rgb(25, 25, 25);
     }
@@ -331,7 +334,7 @@
     color: rgb(55, 53, 47);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .auth-title {
       color: rgba(255, 255, 255, 0.9);
     }
@@ -342,7 +345,7 @@
     color: rgb(120, 119, 116);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .auth-subtitle {
       color: rgba(255, 255, 255, 0.5);
     }
@@ -373,7 +376,7 @@
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 0 0 4px rgb(35, 131, 226);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .btn {
       color: rgba(255, 255, 255, 0.9);
       background: rgba(255, 255, 255, 0.08);
@@ -409,7 +412,7 @@
     box-shadow: 0 0 0 2px rgb(55, 53, 47), 0 0 0 4px rgb(35, 131, 226);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .btn-primary {
       background: rgb(255, 255, 255);
       color: rgb(55, 53, 47);
@@ -445,7 +448,7 @@
     transform: scale(0.98);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .btn-secondary {
       color: rgba(255, 255, 255, 0.9);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
@@ -466,7 +469,7 @@
     color: rgb(55, 53, 47);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .btn-ghost {
       color: rgba(255, 255, 255, 0.6);
     }
@@ -487,7 +490,7 @@
     background: rgba(224, 62, 62, 0.08);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .btn-danger {
       color: rgb(255, 115, 115);
       box-shadow: inset 0 0 0 1px rgba(255, 115, 115, 0.5);
@@ -508,7 +511,7 @@
     background: rgba(55, 53, 47, 0.08);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .btn-icon:hover {
       background: rgba(255, 255, 255, 0.08);
     }
@@ -532,7 +535,7 @@
     color: rgb(55, 53, 47);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .btn-tab {
       color: rgba(255, 255, 255, 0.5);
     }
@@ -550,7 +553,7 @@
     border-radius: 4px;
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .btn-tab-active {
       background: rgba(255, 255, 255, 0.08);
       color: rgba(255, 255, 255, 0.9);
@@ -574,7 +577,7 @@
     transform: scale(1.01);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .card {
       background: rgb(37, 37, 37);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -627,7 +630,7 @@
     box-shadow: inset 0 0 0 1px rgb(35, 131, 226), 0 0 0 2px rgba(35, 131, 226, 0.2);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .input {
       background: rgba(255, 255, 255, 0.06);
       color: rgba(255, 255, 255, 0.9);
@@ -689,7 +692,7 @@
     background-color: rgb(0, 117, 211);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .checkbox {
       border-color: rgba(255, 255, 255, 0.4);
     }
@@ -719,7 +722,7 @@
     color: rgb(55, 53, 47);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .label {
       color: rgba(255, 255, 255, 0.9);
     }
@@ -738,7 +741,7 @@
     text-decoration-color: rgba(55, 53, 47, 0.5);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .link {
       color: rgba(255, 255, 255, 0.6);
       text-decoration-color: rgba(255, 255, 255, 0.2);
@@ -764,7 +767,7 @@
     background: rgba(55, 53, 47, 0.08);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .menu-entry {
       color: rgba(255, 255, 255, 0.9);
     }
@@ -778,7 +781,7 @@
     background: rgba(55, 53, 47, 0.08);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .menu-entry-active {
       background: rgba(255, 255, 255, 0.08);
     }
@@ -793,7 +796,7 @@
     box-shadow: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px, rgba(15, 15, 15, 0.1) 0px 3px 6px, rgba(15, 15, 15, 0.2) 0px 9px 24px;
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .dropdown-menu {
       background: rgb(37, 37, 37);
       box-shadow: rgba(15, 15, 15, 0.1) 0px 0px 0px 1px, rgba(15, 15, 15, 0.2) 0px 3px 6px, rgba(15, 15, 15, 0.4) 0px 9px 24px;
@@ -805,7 +808,7 @@
     box-shadow: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px, rgba(15, 15, 15, 0.1) 0px 3px 6px, rgba(15, 15, 15, 0.2) 0px 9px 24px;
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .panel-shadow {
       box-shadow: rgba(15, 15, 15, 0.1) 0px 0px 0px 1px, rgba(15, 15, 15, 0.2) 0px 3px 6px, rgba(15, 15, 15, 0.4) 0px 9px 24px;
     }
@@ -820,7 +823,7 @@
     background: rgba(55, 53, 47, 0.08);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .dropdown-item {
       color: rgba(255, 255, 255, 0.9);
     }
@@ -836,7 +839,7 @@
     background: rgba(55, 53, 47, 0.09);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .dropdown-divider {
       background: rgba(255, 255, 255, 0.09);
     }
@@ -853,7 +856,7 @@
     box-shadow: inset 0 0 0 1px rgba(55, 53, 47, 0.09);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .table {
       background: rgb(37, 37, 37);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -865,7 +868,7 @@
     color: rgb(120, 119, 116);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .thead {
       color: rgba(255, 255, 255, 0.5);
     }
@@ -881,7 +884,7 @@
     letter-spacing: -0.02em;
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .title {
       color: rgba(255, 255, 255, 0.9);
     }
@@ -933,7 +936,7 @@
     transition: opacity 0.15s ease, background-color 0.15s ease;
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .is-dragging {
       background: rgba(255, 255, 255, 0.03);
     }
@@ -948,7 +951,7 @@
     transition: transform 0.1s ease;
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .drag-ghost {
       background: rgb(37, 37, 37);
       box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 0px 1px, rgba(0, 0, 0, 0.2) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 8px 16px;
@@ -1030,7 +1033,7 @@
     color: rgb(120, 119, 116);
   }
 
-  @media (prefers-color-scheme: dark) {
+  :where([data-theme="dark"]) {
     .drag-handle {
       color: rgba(255, 255, 255, 0.3);
     }
