@@ -1,14 +1,18 @@
 module Features
   class CardComponent < ApplicationComponent
-    def initialize(feature:, project:, stagger_index: 0)
+    # folder_path: the feature's folder, shown in search results, where the card can come
+    # from anywhere in the project. folders: offers Move to… in the card's menu.
+    def initialize(feature:, project:, stagger_index: 0, folder_path: nil, folders: nil)
       @feature = feature
       @project = project
       @stagger_index = stagger_index
+      @folder_path = folder_path
+      @folders = folders
     end
 
     private
 
-    attr_reader :feature, :project, :stagger_index
+    attr_reader :feature, :project, :stagger_index, :folder_path, :folders
 
     def scenarios_count
       feature.scenarios.size

@@ -1,0 +1,28 @@
+<%# The right pane: a folder's sub-folders, then its features; at the root (no folder),
+    the top-level folders, then the unfiled features. %>
+<% subfolders = folders.select { |f| f.parent_id == folder&.id } %>
+<% if folder %>
+  <%= render Folders::HeadingComponent.new(project: project, folder: folder, folders: folders, focus: focus_heading) %>
+<% else %>
+  <h2 class="text-2xl font-bold tracking-tight mb-4 text-stone-800 dark:text-white/90"><%= project.name %></h2>
+<% end %>
+
+<% if subfolders.any? %>
+  <ul aria-label="Sub-folders" class="mb-6 divide-y divide-stone-100 dark:divide-white/5 border border-stone-200 dark:border-white/10 rounded-lg">
+    <% subfolders.each do |subfolder| %>
+      <li>
+        <a href="<%= project_features_path(project, folder: subfolder.id) %>" class="flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 dark:text-white/80 hover:bg-stone-50 dark:hover:bg-white/5">
+          <svg class="w-4 h-4 shrink-0 text-stone-400 dark:text-white/40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+          </svg>
+          <span class="truncate"><%= subfolder.name %></span>
+        </a>
+      </li>
+    <% end %>
+  </ul>
+<% end %>
+
+<% unless folder %>
+  <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-white/40">Unfiled</p>
+<% end %>
+<%= render partial: "features/features", locals: { features: features, project: project, in_folders: true, folders: folders } %>

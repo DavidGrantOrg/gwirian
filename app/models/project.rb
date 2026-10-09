@@ -2,6 +2,9 @@ class Project < ApplicationRecord
   belongs_to :workspace
   has_many :project_members, dependent: :destroy
   has_many :features, dependent: :destroy
+  # After features, so no feature still points at a folder; one DELETE, so parent links
+  # between the folders don't matter.
+  has_many :folders, dependent: :delete_all
   has_many :scenarios, through: :features
   has_many :scenario_executions, through: :scenarios
 
@@ -62,13 +65,17 @@ class Project < ApplicationRecord
   end
 
   # Returns an array of [ filename, content ] for building the BDD export ZIP.
-  # First entry is project_info.md, then one .feature file per feature (slug from title, duplicates suffixed with id).
+  # First entry is project_info.md, then one .feature file per feature (slug from title, duplicates suffixed with id),
+  # in its folder's directories, or at the top when it has no folder.
   def gherkin_export_entries
     entries = []
     entries << [ "project_info.md", gherkin_project_info_content ]
     features_list = features.includes(:scenarios, :taggings).order(:title).to_a
-    used_basenames = {}
+    directories = gherkin_export_directories
+    used_basenames_by_directory = Hash.new { |hash, directory| hash[directory] = {} }
     features_list.each do |feature|
+      directory = directories[feature.folder_id]
+      used_basenames = used_basenames_by_directory[directory]
       base = feature.title.present? ? feature.title.parameterize : "feature"
       base = "feature" if base.blank?
       basename = base.dup
@@ -79,7 +86,7 @@ class Project < ApplicationRecord
       else
         used_basenames[basename] = 1
       end
-      filename = "#{basename}.feature"
+      filename = "#{directory}#{basename}.feature"
       entries << [ filename, feature.to_gherkin ]
     end
     entries
@@ -120,6 +127,21 @@ class Project < ApplicationRecord
   end
 
   private
+
+  # Folder id => "its/directories/" in the export; nil (unfiled) => "". A folder whose
+  # name makes the same directory name as an earlier sibling's gets its id added.
+  def gherkin_export_directories
+    directories = { nil => "" }
+    taken_by_parent = Hash.new { |hash, parent_id| hash[parent_id] = Set.new }
+    Folder.in_tree_order(folders).each do |folder|
+      taken = taken_by_parent[folder.parent_id]
+      base = folder.name.parameterize.presence || "folder"
+      name = taken.include?(base) ? "#{base}-#{folder.id}" : base
+      taken << name
+      directories[folder.id] = "#{directories[folder.parent_id]}#{name}/"
+    end
+    directories
+  end
 
   def gherkin_project_header
     lines = []

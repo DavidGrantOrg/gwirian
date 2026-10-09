@@ -346,6 +346,53 @@ RSpec.describe "Api::V1::Features", type: :request do
     end
   end
 
+  describe "a feature's folder" do
+    let!(:editor_member) { create(:project_member, project: project, email: user.email_address, role: "editor") }
+    let(:headers) { api_headers(workspace_member.api_token) }
+    let(:folder) { create(:folder, project: project, name: "Ordering") }
+    let(:feature) { create(:feature, project: project) }
+
+    it "is empty for an unfiled feature" do
+      feature
+      get "/api/v1/projects/#{project.id}/features", headers: headers
+      expect(json_response.first).to include("folder_id" => nil)
+    end
+
+    it "is set when a feature is created in it" do
+      post "/api/v1/projects/#{project.id}/features", params: { feature: { title: "Reorder", folder_id: folder.id } }, headers: headers
+      expect(response).to have_http_status(:created)
+      get "/api/v1/projects/#{project.id}/features/#{json_response["id"]}", headers: headers
+      expect(json_response["folder_id"]).to eq(folder.id)
+    end
+
+    it "moves to Unfiled when given as null" do
+      feature.update!(folder: folder)
+      patch "/api/v1/projects/#{project.id}/features/#{feature.id}", params: { feature: { folder_id: nil } }, headers: headers, as: :json
+      expect(response).to have_http_status(:ok)
+      get "/api/v1/projects/#{project.id}/features/#{feature.id}", headers: headers
+      expect(json_response["folder_id"]).to be_nil
+    end
+
+    it "stays put when an update leaves it out" do
+      feature.update!(folder: folder)
+      patch "/api/v1/projects/#{project.id}/features/#{feature.id}", params: { feature: { title: "Renamed" } }, headers: headers, as: :json
+      expect(json_response["folder_id"]).to eq(folder.id)
+    end
+
+    it "refuses a folder from another project" do
+      other = create(:folder, project: create(:project, workspace: workspace))
+      patch "/api/v1/projects/#{project.id}/features/#{feature.id}", params: { feature: { folder_id: other.id } }, headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response["errors"]).to eq([ "Folder must be in the same project" ])
+    end
+
+    it "refuses a folder that does not exist" do
+      patch "/api/v1/projects/#{project.id}/features/#{feature.id}", params: { feature: { folder_id: 999_999 } }, headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response["errors"]).to eq([ "Folder must exist" ])
+    end
+  end
+
   describe "DELETE /api/v1/projects/:project_id/features/:id" do
     let!(:feature) { create(:feature, project: project) }
 

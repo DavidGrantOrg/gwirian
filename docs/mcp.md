@@ -80,7 +80,7 @@ Once connected, you can use the following tools. All operations are scoped to th
 
 ### Projects (Read-only)
 - `list_projects` - List all accessible projects in the workspace
-- `get_project` - Get project details with executions and team members
+- `get_project` - Get project details with executions, team members and folders
 
 Project payloads include an optional `context` field (text) for test context: environments and URLs, test accounts and logins, and other hints for scenario execution.
 
@@ -90,6 +90,16 @@ Project payloads include an optional `context` field (text) for test context: en
 - `create_feature` - Create a new feature
 - `update_feature` - Update an existing feature
 - `delete_feature` - Delete a feature
+
+`create_feature` and `update_feature` accept `folder_id`; `null` puts the feature in Unfiled, and leaving `folder_id` out of `update_feature` leaves the feature where it is. `get_feature` and `list_features` return `folder_id` and `folder_path` (`"Ordering › Suggested orders"`, or `null` when Unfiled).
+
+### Folders (Full CRUD)
+- `list_folders` - List a project's folders depth first, each with `id`, `name`, `parent_id` and `path`
+- `create_folder` - Create a folder at the top of the project, or inside `parent_id`
+- `update_folder` - Rename a folder, or move it with `parent_id`; `null` moves it to the top, and leaving `parent_id` out leaves it where it is
+- `delete_folder` - Delete a folder; its features and sub-folders move up into its parent
+
+A folder's name is unique among the folders beside it, and a folder can't be moved inside itself or one of its sub-folders. `get_project` includes the same folder list as `list_folders`.
 
 ### Scenarios (Full CRUD)
 - `list_scenarios` - List scenarios for a feature

@@ -1,13 +1,20 @@
 class FeaturesController < ApplicationController
   before_action :require_workspace
   before_action :set_project
-  before_action :set_feature, only: [ :show, :update, :destroy, :add_tag, :remove_tag, :start_execution, :select_scenarios, :execute_scenarios ]
+  before_action :set_feature, only: [ :show, :update, :destroy, :add_tag, :remove_tag, :move, :start_execution, :select_scenarios, :execute_scenarios ]
 
   def index
+    @folders = Folder.in_tree_order(@project.folders)
+    if params[:folder].present?
+      @folder = @folders.find { |folder| folder.id.to_s == params[:folder].to_s }
+      raise ActiveRecord::RecordNotFound, "Folder not found" unless @folder
+    end
+    @focus_heading = @folder.present? && flash[:new_folder] == @folder.id
+
     if params[:q].present?
       @features = Feature.search_by_project(params[:q], @project.id).order(:title).includes(scenarios: :scenario_executions)
     else
-      @features = @project.features.order(:title).includes(scenarios: :scenario_executions)
+      @features = @project.features.where(folder: @folder).order(:title).includes(scenarios: :scenario_executions)
     end
   end
 
@@ -62,10 +69,28 @@ class FeaturesController < ApplicationController
     @feature.destroy
 
     if htmx_request?
-      @features = @project.features.order(:title)
-      render partial: "features/features", locals: { features: @features, project: @project, notice: "Feature deleted successfully" }
+      @features = @project.features.where(folder_id: @feature.folder_id).order(:title)
+      render partial: "features/features", locals: {
+        features: @features, project: @project, in_folders: @project.folders.exists?, notice: "Feature deleted successfully"
+      }
     else
       redirect_to project_features_path(@project), notice: "Feature deleted successfully"
+    end
+  end
+
+  # Every way of moving a feature (the header's Folder drop-down, a card's Move to…) calls
+  # this; an empty folder_id means Unfiled. htmx gets the header back, whose breadcrumb
+  # shows the new place; a card's menu discards it and removes the card.
+  def move
+    authorize! :update, @feature
+
+    saved = @feature.update(folder_id: params[:folder_id].presence)
+    if htmx_request?
+      @feature.restore_attributes unless saved
+      render Features::HeaderComponent.new(feature: @feature, project: @project), layout: false,
+        status: saved ? :ok : :unprocessable_entity
+    else
+      redirect_to project_feature_path(@project, @feature), alert: saved ? nil : @feature.errors.full_messages.to_sentence
     end
   end
 

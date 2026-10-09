@@ -25,6 +25,7 @@ Rails.application.routes.draw do
       get "projects", to: "projects#index"
       get "projects/:project_id", to: "projects#show"
       get "projects/:project_id/search", to: "projects#search"
+      resources :folders, only: [ :index, :show, :create, :update, :destroy ], path: "projects/:project_id/folders"
       resources :features, only: [ :index, :show, :create, :update, :destroy ], path: "projects/:project_id/features" do
         resources :scenarios, only: [ :index, :show, :create, :update, :destroy ] do
           resources :scenario_executions, only: [ :index, :show, :create, :update, :destroy ]
@@ -35,10 +36,12 @@ Rails.application.routes.draw do
 
   # Workspace-scoped routes (middleware extracts slug and sets Current.workspace)
   resources :projects do
+    resources :folders, only: [ :create, :update, :destroy ]
     resources :features, only: [ :index, :show, :create, :update, :destroy ] do
       member do
         post :add_tag
         delete :remove_tag
+        patch :move
         get :start_execution
         get :select_scenarios
         post :select_scenarios

@@ -28,6 +28,11 @@ module Mcp
             tag_list: {
               type: "string",
               description: "Comma-separated list of tags"
+            },
+            folder_id: {
+              type: [ "integer", "null" ],
+              description: "The ID of the folder to move it into (see list_folders); null moves it to Unfiled, " \
+                "and leaving it out leaves the feature where it is"
             }
           },
           required: [ "feature_id" ]
@@ -41,7 +46,7 @@ module Mcp
         open_world_hint: false
       )
 
-      def self.call(feature_id:, title: nil, description: nil, background: nil, tag_list: nil, server_context:)
+      def self.call(feature_id:, title: nil, description: nil, background: nil, tag_list: nil, folder_id: NOT_GIVEN, server_context:)
         handle_errors do
           current_user = server_context[:current_user]
           feature = Feature.find_by(id: feature_id)
@@ -52,11 +57,12 @@ module Mcp
           update_params[:description] = description if description.present?
           update_params[:background] = background unless background.nil?
           update_params[:tag_list] = tag_list if tag_list.present?
+          update_params[:folder_id] = folder_id unless folder_id.equal?(NOT_GIVEN)
 
           if feature.update(update_params)
             result = feature.as_json(only: [ :id, :title, :description, :created_at, :updated_at, :project_id ])
             result["tag_list"] = feature.tag_list
-            success_result(result)
+            success_result(result.merge(feature_folder_fields(feature)))
           else
             error_result("Validation failed: #{feature.errors.full_messages.join(', ')}", code: -32003)
           end

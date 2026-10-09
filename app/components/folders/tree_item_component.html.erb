@@ -1,0 +1,26 @@
+<% if children.any? %>
+  <li role="treeitem" aria-expanded="<%= open? %>" x-data="{ open: <%= open? %> }" x-bind:aria-expanded="open.toString()" class="pl-3">
+    <div class="flex items-center">
+      <button
+        type="button"
+        class="flex items-center justify-center w-5 h-5 shrink-0 rounded text-stone-400 hover:text-stone-700 dark:text-white/40 dark:hover:text-white/80 cursor-pointer"
+        aria-label="Show or hide <%= folder.name %>'s sub-folders"
+        x-on:click="open = !open"
+        x-text="open ? '▾' : '▸'"
+      ><%= open? ? "▾" : "▸" %></button>
+      <%= link %>
+    </div>
+    <ul role="group" x-show="open" <%= 'style="display: none;"'.html_safe unless open? %>>
+      <% children.each do |child_folder| %>
+        <%= render child(child_folder) %>
+      <% end %>
+    </ul>
+  </li>
+<% else %>
+  <li role="treeitem" class="pl-3">
+    <div class="flex items-center">
+      <span class="w-5 shrink-0" aria-hidden="true"></span>
+      <%= link %>
+    </div>
+  </li>
+<% end %>

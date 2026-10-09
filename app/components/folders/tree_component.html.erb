@@ -1,0 +1,16 @@
+<nav aria-label="Folders" class="text-sm">
+  <ul role="tree">
+    <li role="treeitem" aria-expanded="true">
+      <a
+        href="<%= helpers.project_features_path(project) %>"
+        class="flex items-center gap-2 px-2 py-1.5 rounded-md font-semibold text-stone-800 dark:text-white/90 hover:bg-stone-100 dark:hover:bg-white/5 <%= 'bg-stone-100 dark:bg-white/10' if selected.nil? %>"
+        <%= 'aria-current="page"'.html_safe if selected.nil? %>
+      ><%= project.name %></a>
+      <ul role="group" class="mt-0.5">
+        <% (children_by_parent_id[nil] || []).each do |folder| %>
+          <%= render item(folder) %>
+        <% end %>
+      </ul>
+    </li>
+  </ul>
+</nav>
