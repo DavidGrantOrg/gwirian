@@ -12,6 +12,13 @@ class Project < ApplicationRecord
   validates :description, length: { maximum: 1000 }
   validates :context, length: { maximum: 10_000 }, allow_blank: true
 
+  # Until a run is recorded, the dashboard has no pass rate to show.
+  def runs_recorded?
+    return @runs_recorded if defined?(@runs_recorded)
+
+    @runs_recorded = scenario_executions.exists?
+  end
+
   # Returns the user's role in the project, or nil if not a member
   # This method is optimized to make a single query
   # @param [User] user
