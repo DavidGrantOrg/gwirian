@@ -25,4 +25,4 @@
 <% unless folder %>
   <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-white/40">Unfiled</p>
 <% end %>
-<%= render partial: "features/features", locals: { features: features, project: project, in_folders: true } %>
+<%= render partial: "features/features", locals: { features: features, project: project, in_folders: true, folders: folders } %>

@@ -41,6 +41,7 @@ Rails.application.routes.draw do
       member do
         post :add_tag
         delete :remove_tag
+        patch :move
         get :start_execution
         get :select_scenarios
         post :select_scenarios

@@ -1,0 +1,14 @@
+<label class="mt-3 flex items-center gap-2 text-sm text-stone-500 dark:text-white/50">
+  Folder
+  <select
+    name="folder_id"
+    aria-label="Folder"
+    class="input py-1 text-sm w-auto max-w-full"
+    hx-patch="<%= helpers.move_project_feature_path(project, feature) %>"
+    hx-trigger="change"
+    hx-target="closest [data-feature-header]"
+    hx-swap="outerHTML"
+  >
+    <%= helpers.options_for_select(choices, feature.folder_id.to_s) %>
+  </select>
+</label>

@@ -1,7 +1,7 @@
 class FeaturesController < ApplicationController
   before_action :require_workspace
   before_action :set_project
-  before_action :set_feature, only: [ :show, :update, :destroy, :add_tag, :remove_tag, :start_execution, :select_scenarios, :execute_scenarios ]
+  before_action :set_feature, only: [ :show, :update, :destroy, :add_tag, :remove_tag, :move, :start_execution, :select_scenarios, :execute_scenarios ]
 
   def index
     @folders = Folder.in_tree_order(@project.folders)
@@ -75,6 +75,22 @@ class FeaturesController < ApplicationController
       }
     else
       redirect_to project_features_path(@project), notice: "Feature deleted successfully"
+    end
+  end
+
+  # Every way of moving a feature (the header's Folder drop-down, a card's Move to…) calls
+  # this; an empty folder_id means Unfiled. htmx gets the header back, whose breadcrumb
+  # shows the new place; a card's menu discards it and removes the card.
+  def move
+    authorize! :update, @feature
+
+    saved = @feature.update(folder_id: params[:folder_id].presence)
+    if htmx_request?
+      @feature.restore_attributes unless saved
+      render Features::HeaderComponent.new(feature: @feature, project: @project), layout: false,
+        status: saved ? :ok : :unprocessable_entity
+    else
+      redirect_to project_feature_path(@project, @feature), alert: saved ? nil : @feature.errors.full_messages.to_sentence
     end
   end
 

@@ -1,4 +1,4 @@
-<div class="relative" x-data="{ open: false }">
+<div class="relative" x-data="{ open: false, moving: false }" x-effect="if (!open) moving = false">
   <button
     type="button"
     class="<%= button_classes %> absolute top-0 right-0 mt-2 mr-2"
@@ -18,6 +18,28 @@
     aria-orientation="vertical"
     aria-label="Dropdown menu"
   >
+    <% if move_choices.any? %>
+      <button
+        type="button"
+        class="w-full text-left px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 dark:text-white/80 dark:hover:bg-stone-800 flex items-center gap-2 rounded-md cursor-pointer"
+        aria-haspopup="menu"
+        x-on:click.stop="moving = !moving"
+        role="menuitem">
+        Move to…
+      </button>
+      <div x-show="moving" style="display: none;" role="menu" aria-label="Move to" class="max-h-64 overflow-y-auto border-y border-stone-100 dark:border-white/5">
+        <% move_choices.each do |label, folder_id| %>
+          <button
+            type="button"
+            class="w-full text-left pl-8 pr-4 py-1.5 text-sm text-stone-600 hover:bg-stone-50 dark:text-white/70 dark:hover:bg-stone-800 truncate cursor-pointer"
+            hx-patch="<%= move_path %>"
+            hx-vals="<%= { folder_id: folder_id.to_s }.to_json %>"
+            hx-target="closest [data-feature-card]"
+            hx-swap="delete"
+            role="menuitem"><%= label %></button>
+        <% end %>
+      </div>
+    <% end %>
     <button
       type="button"
       class="w-full text-left px-4 py-2 text-sm text-error-600 hover:bg-error-50 dark:text-error-300 dark:hover:bg-stone-800 flex items-center gap-2 rounded-md focus-visible:ring-3 focus-visible:ring-error-500 cursor-pointer"

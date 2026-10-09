@@ -4,7 +4,7 @@
       <% folders_by_id = local_assigns[:folders_by_id] %>
       <% features.each_with_index do |feature, index| %>
         <%= render Features::CardComponent.new(feature: feature, project: project, stagger_index: index,
-              folder_path: folders_by_id && folders_by_id[feature.folder_id]&.path_label) %>
+              folder_path: folders_by_id && folders_by_id[feature.folder_id]&.path_label, folders: local_assigns[:folders]) %>
       <% end %>
     </div>
   <% elsif local_assigns[:in_folders] %>
