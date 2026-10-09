@@ -20,7 +20,7 @@
         async initChart() {
           const echarts = await import("echarts");
           this.chart = echarts.init(this.$refs.chart);
-          const isDark = document.documentElement.classList.contains("dark");
+          const isDark = document.documentElement.dataset.theme === "dark";
           const textColor = isDark ? "#a8a29e" : "#78716c";
           const gridColor = isDark ? "#44403c" : "#e7e5e4";
           const option = {
