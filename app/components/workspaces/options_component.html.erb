@@ -31,7 +31,7 @@
             pattern: "[a-z0-9]+(?:-[a-z0-9]+)*",
             title: "Lowercase letters, numbers, and hyphens only" %>
       </div>
-      <p class="text-xs text-stone-400 dark:text-white/40 mt-1">Optional. Leave blank to auto-generate from workspace name.</p>
+      <p class="text-xs text-stone-500 dark:text-white/55 mt-1">Optional. Leave blank to auto-generate from workspace name.</p>
     </div>
 
     <div>
@@ -61,7 +61,7 @@
             <% if ws.description.present? %>
               <p class="text-sm text-stone-500 dark:text-white/60 mt-1"><%= ws.description %></p>
             <% end %>
-            <p class="text-xs text-stone-400 dark:text-white/40 mt-1">Role: <%= workspace_member.role.humanize %></p>
+            <p class="text-xs text-stone-500 dark:text-white/55 mt-1">Role: <%= workspace_member.role.humanize %></p>
           </div>
           <%= button_to "Accept", accept_workspace_invitation_path(workspace_member),
               method: :patch,
@@ -85,7 +85,7 @@
             <% if ws.description.present? %>
               <p class="text-sm text-stone-500 dark:text-white/60 mt-1"><%= ws.description %></p>
             <% end %>
-            <p class="text-xs text-stone-400 dark:text-white/40 mt-1">Role: <%= workspace_member.role.humanize %></p>
+            <p class="text-xs text-stone-500 dark:text-white/55 mt-1">Role: <%= workspace_member.role.humanize %></p>
           </div>
           <%= button_to "Rejoin", rejoin_workspace_path(workspace_member),
               method: :patch,

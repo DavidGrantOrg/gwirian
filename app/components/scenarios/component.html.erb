@@ -44,7 +44,7 @@
     <button
       type="button"
       @click="expanded = !expanded"
-      class="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded cursor-pointer transition-colors hover:bg-stone-100 dark:hover:bg-white/10 text-stone-400 dark:text-white/30"
+      class="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded cursor-pointer transition-colors hover:bg-stone-100 dark:hover:bg-white/10 text-stone-500 dark:text-white/30"
       aria-label="Toggle scenario details"
     >
       <svg
@@ -82,7 +82,7 @@
     class="mt-2 ml-7 pl-3 border-l border-stone-200 dark:border-white/10"
   >
     <% if latest_execution %>
-      <div class="mb-2 pb-2 text-xs text-stone-400 dark:text-white/40 border-b border-stone-100 dark:border-white/5">
+      <div class="mb-2 pb-2 text-xs text-stone-500 dark:text-white/55 border-b border-stone-100 dark:border-white/5">
         Last run: <%= helpers.format_datetime(latest_execution.executed_at) %>
         <% if latest_execution.notes.present? %>
           <div class="mt-0.5 text-stone-500 dark:text-white/60"><%= latest_execution.notes %></div>

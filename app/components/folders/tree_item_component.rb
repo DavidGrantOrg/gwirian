@@ -37,7 +37,7 @@ module Folders
         aria: { current: selected? ? "page" : nil } do
         safe_join([
           tag.span(folder.name, class: "truncate"),
-          tag.span(feature_count, class: "text-xs tabular-nums text-stone-400 dark:text-white/40")
+          tag.span(feature_count, class: "text-xs tabular-nums text-stone-500 dark:text-white/55")
         ], " ")
       end
     end
