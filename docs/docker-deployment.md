@@ -110,6 +110,21 @@ docker exec <container> bin/rails runner 'User.create!(email_address: "you@examp
 
 Then sign in with that address as usual, create a workspace, and invite the others from it.
 
+#### New scenarios in the backlog
+
+A scenario in the backlog is written but not built yet.
+It keeps its folder, its feature and any runs, shows a Backlog badge, and is left out of every count and pass rate, of Failing Tests and of a manual run.
+By default a new scenario is not in the backlog.
+To start every new scenario in it, set `NEW_SCENARIOS=backlog`:
+
+```sh
+docker run --env NEW_SCENARIOS=backlog ...
+```
+
+Any value but `active` or `backlog` stops Gwirian at boot.
+A scenario leaves the backlog through the REST API (`PATCH .../scenarios/:id` with `{"scenario": {"backlog": false}}`) or MCP's `update_scenario`; there is no button for it yet.
+The 7-day pass-rate trend applies each scenario's flag as it is today to past weeks, and the BDD export still includes backlog scenarios.
+
 #### Elasticsearch URL
 
 Gwirian uses Elasticsearch for fulltext search and indexing. Set `ELASTICSEARCH_URL` to the full URL where your Elasticsearch instance is accessible:
