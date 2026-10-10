@@ -65,6 +65,10 @@
       <%= render Scenarios::TitleComponent.new(scenario: scenario, feature: feature, project: project) %>
     </div>
 
+    <% if scenario.backlog? %>
+      <%= render Shared::StatusComponent.new(status: "backlog", variant: :badge, size: :sm) %>
+    <% end %>
+
     <% if helpers.can?(:destroy, scenario) %>
       <%= render Scenarios::DropdownMenuComponent.new(scenario: scenario, feature: feature, project: project) %>
     <% end %>

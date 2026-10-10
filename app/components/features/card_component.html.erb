@@ -25,6 +25,7 @@
       <%# Execution statistics %>
       <% if has_scenarios? %>
         <div class="mt-4 pt-3 border-t border-stone-100 dark:border-white/5">
+          <% if scenarios_count > 0 %>
           <div class="text-xs text-stone-600 dark:text-white/70 mb-2">
             <%= scenarios_count %> <%= "scenario".pluralize(scenarios_count) %>
           </div>
@@ -41,6 +42,7 @@
               <div class="h-full bg-stone-300 dark:bg-white/30" style="width: <%= pending_percentage %>%"></div>
             <% end %>
           </div>
+          <% end %>
 
           <%# Legend %>
           <div class="flex items-center gap-4 text-xs">
@@ -66,6 +68,14 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
                 <%= execution_stats[:pending] %> Pending
+              </span>
+            <% end %>
+            <% if execution_stats[:backlog] > 0 %>
+              <span class="flex items-center gap-1 status-inline-text-backlog">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="<%= Shared::StatusComponent::STATUS_STYLES["backlog"][:icon] %>" />
+                </svg>
+                <%= execution_stats[:backlog] %> <%= t("status.backlog") %>
               </span>
             <% end %>
           </div>
