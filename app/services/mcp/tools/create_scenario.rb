@@ -28,6 +28,10 @@ module Mcp
             then: {
               type: "string",
               description: "The Then part of the scenario (optional)"
+            },
+            backlog: {
+              type: "boolean",
+              description: "Whether the scenario is in the backlog: written but not built, and left out of every count (optional; defaults to the server's NEW_SCENARIOS setting)"
             }
           },
           required: [ "feature_id", "title" ]
@@ -41,7 +45,7 @@ module Mcp
         open_world_hint: false
       )
 
-      def self.call(feature_id:, title:, given: nil, server_context:, **kwargs)
+      def self.call(feature_id:, title:, given: nil, backlog: NOT_GIVEN, server_context:, **kwargs)
         handle_errors do
           current_user = server_context[:current_user]
           feature = Feature.find_by(id: feature_id)
@@ -56,11 +60,12 @@ module Mcp
             when: when_value,
             then: then_value
           )
+          scenario.backlog = backlog unless backlog.equal?(NOT_GIVEN)
 
           authorize!(current_user, :create, scenario)
 
           if scenario.save
-            result = scenario.as_json(only: [ :id, :title, :position, :created_at, :updated_at, :feature_id ])
+            result = scenario.as_json(only: [ :id, :title, :position, :backlog, :created_at, :updated_at, :feature_id ])
             result["given"] = scenario.given
             result["when"] = scenario.when
             result["then"] = scenario.then
