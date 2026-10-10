@@ -36,7 +36,10 @@ en:
     something_went_wrong: "Something went wrong. Please try again."
     invalid_code: "Invalid or expired code. Please try again."
     check_email: "Check your email for a verification code."
-  
+
+  status:
+    backlog: "Backlog"
+
   dashboard:
     view_features: "View Features"
     
