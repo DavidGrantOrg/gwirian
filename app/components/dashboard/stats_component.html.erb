@@ -53,6 +53,9 @@
             </div>
           <% end %>
           <% end %>
+          <% if backlog_count.positive? %>
+            <span class="text-xs <%= pass_rate_card_color_classes[:label] %>"><%= t("dashboard.stats.backlog", count: backlog_count) %></span>
+          <% end %>
         </div>
       </div>
 

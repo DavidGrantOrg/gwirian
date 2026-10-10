@@ -62,6 +62,11 @@ RSpec.describe "Project dashboard", type: :request do
         "Reorder from history 1 scenarios"
       ])
     end
+
+    it "shows a feature whose scenarios are all in the backlog as Backlog" do
+      scenarios.last.update!(backlog: true)
+      expect(coverage_entries(dashboard).first).to eq("Sign in Backlog")
+    end
   end
 
   context "once a run is recorded" do
@@ -130,6 +135,68 @@ RSpec.describe "Project dashboard", type: :request do
       text = main_text(dashboard)
       expect(text).to include("-50%")
       expect(text).to include("was 100%")
+    end
+
+    it "leaves backlog scenarios out of last week's rate" do
+      in_backlog = create(:scenario, :backlog, feature: prices, created_at: 20.days.ago)
+      create(:scenario_execution, scenario: in_backlog, user: user, status: "failed", executed_at: 10.days.ago)
+      expect(main_text(dashboard)).to include("was 100%")
+    end
+  end
+
+  context "with scenarios in the backlog" do
+    before do
+      create(:scenario_execution, scenario: scenarios.first, user: user, status: "passed")
+      create(:scenario_execution, scenario: create(:scenario, :backlog, feature: prices), user: user, status: "failed")
+      scenarios.last.update!(backlog: true)
+    end
+
+    it "rates only the scenarios out of the backlog, and says how many are in it" do
+      text = main_text(dashboard)
+      expect(text).to include("Pass Rate 100% of 1 tested scenario")
+      expect(text).to include("2 in backlog")
+    end
+
+    it "leaves them out of the legend and the scenario count" do
+      text = main_text(dashboard)
+      expect(text).to include("1 passed 0 failed 2 Untested")
+      expect(text).to include("3 scenarios across 4 features")
+    end
+
+    it "leaves a failed backlog scenario out of Failing Tests" do
+      expect(main_text(dashboard)).to include("All tests are passing!")
+    end
+
+    it "shows a feature with only backlog scenarios as Backlog, and counts the rest" do
+      expect(coverage_entries(dashboard)).to eq([
+        "Sign in Backlog",
+        "## Catalog",
+        "Prices 1 scenarios 1 pending 1 in backlog",
+        "## Ordering › Suggested orders",
+        "Case sizes 1 scenarios 1 pending",
+        "Reorder from history 1 scenarios 1 passed"
+      ])
+    end
+  end
+
+  context "with every scenario in the backlog" do
+    before do
+      create(:scenario_execution, scenario: scenarios.first, user: user, status: "passed")
+      scenarios.each { |scenario| scenario.update!(backlog: true) }
+    end
+
+    it "says no scenario has passed or failed, and how many are in the backlog" do
+      text = main_text(dashboard)
+      expect(text).to include("Pass Rate No scenario has passed or failed yet")
+      expect(text).to include("4 in backlog")
+    end
+  end
+
+  context "with an empty backlog" do
+    before { create(:scenario_execution, scenario: scenarios.first, user: user, status: "passed") }
+
+    it "says nothing about a backlog" do
+      expect(main_text(dashboard)).not_to include("in backlog")
     end
   end
 end

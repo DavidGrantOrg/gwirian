@@ -1,6 +1,6 @@
 <% if badge? %>
   <span class="<%= badge_class %>">
-    <%= status_styles[:label] %>
+    <%= label %>
   </span>
 <% elsif icon? %>
   <div class="flex-shrink-0">
@@ -15,7 +15,7 @@
     <svg class="<%= inline_icon_class %>" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<%= status_styles[:icon] %>"/>
     </svg>
-    <span class="<%= inline_text_class %>"><%= status_styles[:label] %></span>
+    <span class="<%= inline_text_class %>"><%= label %></span>
   </span>
 <% end %>
 

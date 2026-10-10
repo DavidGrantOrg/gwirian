@@ -33,6 +33,29 @@ RSpec.describe "Projects index", type: :request do
     end
   end
 
+  context "with a scenario in the backlog" do
+    before do
+      create(:scenario_execution, scenario: scenarios.first, user: user, status: "passed")
+      create(:scenario_execution, scenario: scenarios.second, user: user, status: "failed")
+      scenarios.third.update!(backlog: true)
+      create(:scenario_execution, scenario: scenarios.third, user: user, status: "failed")
+    end
+
+    it "leaves it out of the rate and the counts, and says how many are in the backlog" do
+      text = card_text
+      expect(text).to include("50% success rate 1 in backlog 1 1 1")
+      expect(text).to include("3 scenarios")
+      expect(text).to include("1 failed")
+    end
+  end
+
+  context "with an empty backlog" do
+    it "says nothing about a backlog" do
+      create(:scenario_execution, scenario: scenarios.first, user: user, status: "passed")
+      expect(card_text).not_to include("in backlog")
+    end
+  end
+
   context "before any scenario has passed or failed" do
     before { create(:scenario_execution, scenario: scenarios.first, user: user, status: "pending") }
 

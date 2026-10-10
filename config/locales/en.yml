@@ -65,6 +65,7 @@ en:
       tested:
         one: "of 1 tested scenario"
         other: "of %{count} tested scenarios"
+      backlog: "%{count} in backlog"
       weekly_activity:
         one: "1 run this week"
         other: "%{count} runs this week"
@@ -79,6 +80,7 @@ en:
       passed: "passed"
       failed: "failed"
       pending: "pending"
+      backlog: "%{count} in backlog"
       no_scenarios: "No scenarios yet"
       no_features: "No features yet"
     

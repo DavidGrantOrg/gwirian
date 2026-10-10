@@ -14,6 +14,10 @@ module Shared
       "pending" => {
         label: "Pending",
         icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+      },
+      "backlog" => {
+        label_key: "status.backlog",
+        icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
       }
     }.freeze
 
@@ -29,6 +33,10 @@ module Shared
 
     def status_styles
       STATUS_STYLES.fetch(@status, STATUS_STYLES["pending"])
+    end
+
+    def label
+      status_styles[:label] || t(status_styles[:label_key])
     end
 
     def badge_class
