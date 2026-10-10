@@ -86,5 +86,17 @@ RSpec.describe "Project dashboard", type: :request do
         "Reorder from history 1 scenarios 1 passed"
       ])
     end
+
+    context "with one scenario passed and one failed" do
+      before { create(:scenario_execution, scenario: scenarios.second, user: user, status: "failed") }
+
+      it "shows the pass rate" do
+        expect(main_text(dashboard)).to include("Pass Rate 25%")
+      end
+
+      it "counts every scenario in the legend" do
+        expect(main_text(dashboard)).to include("1 passed 1 failed 2 Untested")
+      end
+    end
   end
 end
