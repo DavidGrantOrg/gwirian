@@ -90,13 +90,46 @@ RSpec.describe "Project dashboard", type: :request do
     context "with one scenario passed and one failed" do
       before { create(:scenario_execution, scenario: scenarios.second, user: user, status: "failed") }
 
-      it "shows the pass rate" do
-        expect(main_text(dashboard)).to include("Pass Rate 25%")
+      it "shows the pass rate of the tested scenarios, and how many were tested" do
+        expect(main_text(dashboard)).to include("Pass Rate 50% of 2 tested scenarios")
       end
 
       it "counts every scenario in the legend" do
         expect(main_text(dashboard)).to include("1 passed 1 failed 2 Untested")
       end
+    end
+
+    context "with a scenario whose latest run is pending" do
+      before { create(:scenario_execution, scenario: scenarios.second, user: user, status: "pending") }
+
+      it "counts it as untested" do
+        expect(main_text(dashboard)).to include("1 passed 0 failed 3 Untested")
+      end
+    end
+  end
+
+  context "when the only run recorded is pending" do
+    before { create(:scenario_execution, scenario: scenarios.first, user: user, status: "pending") }
+
+    it "says no scenario has passed or failed instead of showing a rate" do
+      page = dashboard
+      health = page.css("span").find { |span| span.text.squish == "Pass Rate" }.ancestors("div.rounded-xl").first
+      expect(main_text(page)).to include("Pass Rate No scenario has passed or failed yet")
+      expect(health.text).not_to include("%")
+    end
+  end
+
+  context "with a scenario that passed the week before" do
+    before do
+      scenarios.first.update!(created_at: 20.days.ago)
+      create(:scenario_execution, scenario: scenarios.first, user: user, status: "passed", executed_at: 10.days.ago)
+      create(:scenario_execution, scenario: scenarios.second, user: user, status: "failed")
+    end
+
+    it "compares this week's rate of tested scenarios with last week's" do
+      text = main_text(dashboard)
+      expect(text).to include("-50%")
+      expect(text).to include("was 100%")
     end
   end
 end

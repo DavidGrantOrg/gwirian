@@ -22,14 +22,23 @@ RSpec.describe "Projects index", type: :request do
       create(:scenario_execution, scenario: scenarios.second, user: user, status: "failed")
     end
 
-    it "shows the success rate" do
-      expect(card_text).to include("25% success rate")
+    it "shows the success rate of the tested scenarios" do
+      expect(card_text).to include("50% success rate")
     end
 
     it "counts passed, failed and pending scenarios" do
       expect(card_text).to include("success rate 1 1 2")
       expect(card_text).to include("4 scenarios")
       expect(card_text).to include("1 failed")
+    end
+  end
+
+  context "before any scenario has passed or failed" do
+    before { create(:scenario_execution, scenario: scenarios.first, user: user, status: "pending") }
+
+    it "shows no success rate" do
+      expect(card_text).to include("No executions yet")
+      expect(card_text).not_to include("%")
     end
   end
 end
