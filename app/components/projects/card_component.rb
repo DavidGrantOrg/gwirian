@@ -52,13 +52,17 @@ module Projects
       100 - passed_percentage - failed_percentage
     end
 
+    def tested_count
+      execution_stats[:passed] + execution_stats[:failed]
+    end
+
+    # Rendered only when has_executions?, so tested_count is never zero here.
     def success_rate
-      return 0 if execution_stats[:total].zero?
-      passed_percentage
+      (execution_stats[:passed].to_f / tested_count * 100).round
     end
 
     def has_executions?
-      execution_stats[:total] > 0
+      tested_count > 0
     end
 
     def last_activity

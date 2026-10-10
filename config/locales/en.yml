@@ -58,6 +58,10 @@ en:
       last_tested_never: "Never tested"
       no_runs: "No runs recorded yet"
       no_runs_hint: "The pass rate appears once a scenario's run is recorded."
+      none_tested: "No scenario has passed or failed yet"
+      tested:
+        one: "of 1 tested scenario"
+        other: "of %{count} tested scenarios"
       weekly_activity:
         one: "1 run this week"
         other: "%{count} runs this week"
