@@ -405,4 +405,70 @@ RSpec.describe "Api::V1::Scenarios", type: :request do
       end
     end
   end
+
+  describe "backlog" do
+    let!(:editor_member) { create(:project_member, project: project, email: user.email_address, role: "editor") }
+    let(:base) { "/api/v1/projects/#{project.id}/features/#{feature.id}/scenarios" }
+    let(:headers) { api_headers(workspace_member.api_token) }
+
+    around do |example|
+      previous = ENV["NEW_SCENARIOS"]
+      example.run
+    ensure
+      ENV["NEW_SCENARIOS"] = previous
+    end
+
+    def backlog_of(scenario_id)
+      get "#{base}/#{scenario_id}", headers: headers
+      json_response["backlog"]
+    end
+
+    it "creates a scenario out of the backlog by default" do
+      ENV.delete("NEW_SCENARIOS")
+      post base, params: { scenario: { title: "Order a full case" } }, headers: headers, as: :json
+      expect(response).to have_http_status(:created)
+      expect(backlog_of(json_response["id"])).to be(false)
+    end
+
+    it "creates a scenario in the backlog when NEW_SCENARIOS is backlog" do
+      ENV["NEW_SCENARIOS"] = "backlog"
+      post base, params: { scenario: { title: "Order a full case" } }, headers: headers, as: :json
+      expect(json_response["backlog"]).to be(true)
+      expect(backlog_of(json_response["id"])).to be(true)
+    end
+
+    it "creates a scenario out of the backlog when asked, whatever NEW_SCENARIOS says" do
+      ENV["NEW_SCENARIOS"] = "backlog"
+      post base, params: { scenario: { title: "Order a full case", backlog: false } }, headers: headers, as: :json
+      expect(backlog_of(json_response["id"])).to be(false)
+    end
+
+    it "takes a scenario out of the backlog" do
+      scenario = create(:scenario, :backlog, feature: feature)
+      patch "#{base}/#{scenario.id}", params: { scenario: { backlog: false } }, headers: headers, as: :json
+      expect(response).to have_http_status(:ok)
+      expect(json_response["backlog"]).to be(false)
+      expect(backlog_of(scenario.id)).to be(false)
+    end
+
+    it "puts a scenario in the backlog" do
+      scenario = create(:scenario, feature: feature)
+      patch "#{base}/#{scenario.id}", params: { scenario: { backlog: true } }, headers: headers, as: :json
+      expect(backlog_of(scenario.id)).to be(true)
+    end
+
+    it "refuses a backlog that is neither true nor false" do
+      scenario = create(:scenario, :backlog, feature: feature)
+      patch "#{base}/#{scenario.id}", params: { scenario: { backlog: nil } }, headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response["errors"]).to eq([ "Backlog is not included in the list" ])
+      expect(backlog_of(scenario.id)).to be(true)
+    end
+
+    it "lists each scenario's backlog" do
+      create(:scenario, :backlog, feature: feature)
+      get base, headers: headers
+      expect(json_response.map { |scenario| scenario["backlog"] }).to eq([ true ])
+    end
+  end
 end

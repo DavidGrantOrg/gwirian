@@ -10,6 +10,7 @@
     <%# Left: Pass Rate Gauge (ring without label + number + trend + bar + legend) %>
     <div class="<%= pass_rate_card_color_classes[:bg] %> flex-1 flex flex-col gap-4 p-6 lg:p-8 lg:min-w-0">
       <div class="flex flex-wrap items-center gap-6">
+        <% if pass_rate %>
         <div class="flex-shrink-0">
           <%= render Shared::ProgressRingComponent.new(
             percent: pass_rate,
@@ -19,13 +20,20 @@
             show_label: false
           ) %>
         </div>
+        <% end %>
         <div class="flex flex-col gap-1 min-w-0">
           <span class="font-medium uppercase tracking-wide <%= pass_rate_card_color_classes[:label] %> text-xs lg:text-sm">
             <%= t("dashboard.stats.pass_rate") %>
           </span>
+          <% if pass_rate.nil? %>
+          <p class="text-lg font-semibold text-stone-800 dark:text-white/90"><%= t("dashboard.stats.none_tested") %></p>
+          <% else %>
           <div class="flex items-baseline gap-2 flex-wrap">
             <span class="font-bold tracking-tight tabular-nums <%= pass_rate_card_color_classes[:text] %> text-4xl lg:text-5xl">
               <%= pass_rate %>%
+            </span>
+            <span class="text-sm <%= pass_rate_card_color_classes[:label] %>">
+              <%= t("dashboard.stats.tested", count: tested_count) %>
             </span>
             <% if show_pass_rate_trend? && pass_rate_trend_data %>
               <span class="flex items-center gap-0.5 text-sm font-medium <%= pass_rate_trend_data[:color] %>">
@@ -43,6 +51,10 @@
                 <span><%= pass_rate_trend_previous_value.present? ? ' • ' : '' %><%= pass_rate_trend_period_label %></span>
               <% end %>
             </div>
+          <% end %>
+          <% end %>
+          <% if backlog_count.positive? %>
+            <span class="text-xs <%= pass_rate_card_color_classes[:label] %>"><%= t("dashboard.stats.backlog", count: backlog_count) %></span>
           <% end %>
         </div>
       </div>

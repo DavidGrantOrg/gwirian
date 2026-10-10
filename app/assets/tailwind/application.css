@@ -226,6 +226,10 @@ html { font-size: 106.25%; }
     @apply bg-stone-100 dark:bg-stone-700/50 text-stone-600 dark:text-stone-300;
   }
 
+  .status-badge-backlog {
+    @apply bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400;
+  }
+
   .status-icon-container {
     @apply flex-shrink-0 rounded-full flex items-center justify-center;
   }
@@ -252,6 +256,10 @@ html { font-size: 106.25%; }
 
   .status-icon-pending {
     @apply bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300;
+  }
+
+  .status-icon-backlog {
+    @apply bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400;
   }
 
   .status-icon-svg-sm {
@@ -284,6 +292,10 @@ html { font-size: 106.25%; }
 
   .status-inline-text-pending {
     @apply text-stone-600 dark:text-stone-300;
+  }
+
+  .status-inline-text-backlog {
+    @apply text-sky-700 dark:text-sky-400;
   }
 
   /* ========================================

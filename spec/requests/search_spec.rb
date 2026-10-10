@@ -46,6 +46,15 @@ RSpec.describe "Search with the database backend", type: :request, search_backen
     expect(json_response["results"].map { |r| [ r["type"], r["title"] ] }).to eq([ [ "feature", "Checkout" ], [ "scenario", "Pay by card" ] ])
   end
 
+  it "labels backlog in the command palette" do
+    pay_by_card.update!(backlog: true)
+    sign_in_as(user)
+    get "/#{workspace.slug}/projects/#{project.id}/search.json", params: { q: "basket" }
+
+    expect(json_response["results"].map { |r| [ r["type"], r["status"], r["status_label"] ] })
+      .to eq([ [ "feature", "backlog", "Backlog" ], [ "scenario", "backlog", "Backlog" ] ])
+  end
+
   it "answers the API's project search" do
     get "/api/v1/projects/#{project.id}/search", params: { q: "basket" }, headers: api_headers(workspace_member.api_token)
 

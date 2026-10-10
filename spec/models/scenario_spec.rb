@@ -106,4 +106,50 @@ RSpec.describe Scenario, type: :model do
       expect(search("add")).to eq([ add_item ])
     end
   end
+
+  describe "backlog" do
+    let(:feature) { create(:feature, project: create(:project, workspace: create(:workspace))) }
+
+    around do |example|
+      previous = ENV["NEW_SCENARIOS"]
+      example.run
+    ensure
+      ENV["NEW_SCENARIOS"] = previous
+    end
+
+    it "leaves a new scenario out of the backlog by default" do
+      ENV.delete("NEW_SCENARIOS")
+      expect(create(:scenario, feature: feature).backlog).to be(false)
+    end
+
+    it "puts a new scenario in the backlog when NEW_SCENARIOS is backlog" do
+      ENV["NEW_SCENARIOS"] = "backlog"
+      expect(create(:scenario, feature: feature).backlog).to be(true)
+    end
+
+    it "keeps a backlog value given explicitly, whatever NEW_SCENARIOS says" do
+      ENV["NEW_SCENARIOS"] = "backlog"
+      expect(create(:scenario, feature: feature, backlog: false).backlog).to be(false)
+      ENV["NEW_SCENARIOS"] = "active"
+      expect(create(:scenario, feature: feature, backlog: true).backlog).to be(true)
+    end
+
+    it "refuses a scenario whose backlog is neither true nor false" do
+      scenario = build(:scenario, feature: feature, backlog: nil)
+      expect(scenario).not_to be_valid
+      expect(scenario.errors[:backlog]).to eq([ "is not included in the list" ])
+    end
+
+    it "reads as backlog, even once a run is recorded" do
+      scenario = create(:scenario, :backlog, feature: feature)
+      create(:scenario_execution, scenario: scenario, status: "passed")
+      expect(scenario.reload.current_status).to eq("backlog")
+    end
+
+    it "keeps its run's status once out of the backlog" do
+      scenario = create(:scenario, feature: feature, backlog: false)
+      create(:scenario_execution, scenario: scenario, status: "passed")
+      expect(scenario.reload.current_status).to eq("passed")
+    end
+  end
 end

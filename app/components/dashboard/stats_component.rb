@@ -13,16 +13,22 @@ module Dashboard
     attr_reader :project
 
     def scenarios
-      @scenarios ||= project.scenarios.includes(:scenario_executions)
+      @scenarios ||= project.scenarios.where(backlog: false).includes(:scenario_executions)
     end
 
+    def backlog_count
+      @backlog_count ||= project.scenarios.where(backlog: true).count
+    end
+
+    # Of the scenarios whose latest run passed or failed; nil until one has.
     def pass_rate
-      return 0 if total_scenarios.zero?
-      (passed_count.to_f / total_scenarios * 100).round
+      return nil if tested_count.zero?
+      (passed_count.to_f / tested_count * 100).round
     end
 
     def pass_rate_color
       case pass_rate
+      when nil then :default
       when 80..100 then :success
       when 50..79 then :warning
       else :error
@@ -41,8 +47,12 @@ module Dashboard
       scenarios.count { |s| s.current_status == "failed" }
     end
 
+    def tested_count
+      passed_count + failed_count
+    end
+
     def untested_count
-      scenarios.count { |s| s.scenario_executions.empty? }
+      total_scenarios - tested_count
     end
 
     def features_count
@@ -108,6 +118,7 @@ module Dashboard
     end
 
     def pass_rate_trend_value
+      return nil if current_period_pass_rate.nil? || previous_period_pass_rate.nil?
       diff = current_period_pass_rate - previous_period_pass_rate
       return nil if diff.zero?
       "#{diff > 0 ? '+' : ''}#{diff.round}%"
@@ -131,23 +142,23 @@ module Dashboard
     def scenario_pass_rate_for_period(start_time, end_time)
       # Get all scenarios that existed at the end of the period
       # (scenarios created before or at end_time)
-      period_scenarios = project.scenarios.where("scenarios.created_at <= ?", end_time).includes(:scenario_executions)
-      return 0 if period_scenarios.empty?
+      period_scenarios = project.scenarios.where(backlog: false).where("scenarios.created_at <= ?", end_time).includes(:scenario_executions)
 
       # For each scenario, find the latest execution before end_time
-      # and determine if it was "passed"
       # Using in-memory filtering to avoid N+1 queries since executions are eager loaded
-      passed_count = period_scenarios.count do |scenario|
-        latest_execution = scenario.scenario_executions
+      statuses = period_scenarios.map do |scenario|
+        scenario.scenario_executions
           .select { |exec| exec.executed_at <= end_time }
-          .max_by(&:executed_at)
-        latest_execution&.status == "passed"
+          .max_by(&:executed_at)&.status
       end
+      tested = statuses.count { |status| %w[passed failed].include?(status) }
+      return nil if tested.zero?
 
-      (passed_count.to_f / period_scenarios.count * 100).round
+      (statuses.count("passed").to_f / tested * 100).round
     end
 
     def calculate_trend(current, previous)
+      return nil if current.nil? || previous.nil?
       return :stable if current == previous
       current > previous ? :up : :down
     end

@@ -60,4 +60,38 @@ RSpec.describe Gwirian do
       expect { Gwirian.invite_only_signup? }.to raise_error(ArgumentError, 'SIGNUP must be "open" or "invite_only", not "invite-only"')
     end
   end
+
+  describe ".new_scenarios_in_backlog?" do
+    around do |example|
+      previous = ENV["NEW_SCENARIOS"]
+      example.run
+    ensure
+      ENV["NEW_SCENARIOS"] = previous
+    end
+
+    it "is false when NEW_SCENARIOS is not set" do
+      ENV.delete("NEW_SCENARIOS")
+      expect(Gwirian.new_scenarios_in_backlog?).to be(false)
+    end
+
+    it "is false when NEW_SCENARIOS is active" do
+      ENV["NEW_SCENARIOS"] = "active"
+      expect(Gwirian.new_scenarios_in_backlog?).to be(false)
+    end
+
+    it "is true when NEW_SCENARIOS is backlog" do
+      ENV["NEW_SCENARIOS"] = "backlog"
+      expect(Gwirian.new_scenarios_in_backlog?).to be(true)
+    end
+
+    it "refuses an unknown NEW_SCENARIOS" do
+      ENV["NEW_SCENARIOS"] = "backlogged"
+      expect { Gwirian.new_scenarios_in_backlog? }.to raise_error(ArgumentError, 'NEW_SCENARIOS must be "active" or "backlog", not "backlogged"')
+    end
+
+    it "is checked when the app boots, so a mistyped value stops it starting" do
+      ENV["NEW_SCENARIOS"] = "backlogged"
+      expect { load Rails.root.join("config/initializers/new_scenarios.rb") }.to raise_error(ArgumentError, /NEW_SCENARIOS must be/)
+    end
+  end
 end

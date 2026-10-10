@@ -135,13 +135,13 @@ class FeaturesController < ApplicationController
     authorize! :execute, @feature
 
     if request.get?
-      @scenarios = @feature.scenarios.order(:position).includes(:scenario_executions)
+      @scenarios = runnable_scenarios.order(:position).includes(:scenario_executions)
     elsif request.post?
       selected_ids = params[:scenario_ids] || []
       scenario_ids = selected_ids.map(&:to_i)
 
       # Validate that all scenario IDs belong to this feature
-      valid_scenario_ids = @feature.scenarios.where(id: scenario_ids).pluck(:id)
+      valid_scenario_ids = runnable_scenarios.where(id: scenario_ids).pluck(:id)
       session[:selected_scenario_ids] = valid_scenario_ids
       redirect_to execute_scenarios_project_feature_path(@project, @feature)
     end
@@ -161,7 +161,7 @@ class FeaturesController < ApplicationController
 
       # Validate that all scenario IDs belong to this feature
       scenario_ids = executions_data.keys.map(&:to_i)
-      valid_scenario_ids = @feature.scenarios.where(id: scenario_ids).pluck(:id).map(&:to_s)
+      valid_scenario_ids = runnable_scenarios.where(id: scenario_ids).pluck(:id).map(&:to_s)
 
       executions_data.each do |scenario_id, execution_data|
         # Skip if scenario doesn't belong to this feature
@@ -203,6 +203,11 @@ class FeaturesController < ApplicationController
 
   def feature_params
     params.require(:feature).permit(:title, :description, :background, :tag_list)
+  end
+
+  # A backlog scenario is not built yet, so a manual run neither offers nor records it.
+  def runnable_scenarios
+    @feature.scenarios.where(backlog: false)
   end
 
   def execution_params

@@ -36,7 +36,10 @@ en:
     something_went_wrong: "Something went wrong. Please try again."
     invalid_code: "Invalid or expired code. Please try again."
     check_email: "Check your email for a verification code."
-  
+
+  status:
+    backlog: "Backlog"
+
   dashboard:
     view_features: "View Features"
     
@@ -58,6 +61,11 @@ en:
       last_tested_never: "Never tested"
       no_runs: "No runs recorded yet"
       no_runs_hint: "The pass rate appears once a scenario's run is recorded."
+      none_tested: "No scenario has passed or failed yet"
+      tested:
+        one: "of 1 tested scenario"
+        other: "of %{count} tested scenarios"
+      backlog: "%{count} in backlog"
       weekly_activity:
         one: "1 run this week"
         other: "%{count} runs this week"
@@ -72,6 +80,7 @@ en:
       passed: "passed"
       failed: "failed"
       pending: "pending"
+      backlog: "%{count} in backlog"
       no_scenarios: "No scenarios yet"
       no_features: "No features yet"
     

@@ -112,4 +112,23 @@ RSpec.describe Project, type: :model do
       end
     end
   end
+
+  describe "#search_content", search_backend: :database do
+    let(:feature) { create(:feature, project: project, title: "Checkout") }
+
+    def feature_status
+      project.search_content("checkout").find { |r| r[:type] == "feature" }[:status]
+    end
+
+    it "leaves backlog scenarios out of a feature's status" do
+      create(:scenario_execution, scenario: create(:scenario, feature: feature), status: "passed")
+      create(:scenario, :backlog, feature: feature)
+      expect(feature_status).to eq("passed")
+    end
+
+    it "reads backlog for a feature whose scenarios are all in the backlog" do
+      create(:scenario_execution, scenario: create(:scenario, :backlog, feature: feature), status: "failed")
+      expect(feature_status).to eq("backlog")
+    end
+  end
 end
