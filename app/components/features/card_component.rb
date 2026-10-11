@@ -14,21 +14,22 @@ module Features
 
     attr_reader :feature, :project, :stagger_index, :folder_path, :folders
 
+    # Out of the backlog only.
     def scenarios_count
-      feature.scenarios.size
+      execution_stats[:total]
     end
 
     def execution_stats
       @execution_stats ||= begin
         statuses = feature.scenarios.includes(:scenario_executions).map(&:current_status)
-        total = statuses.size
-        return { passed: 0, failed: 0, pending: 0, total: 0 } if total.zero?
+        backlog = statuses.count("backlog")
 
         {
           passed: statuses.count("passed"),
           failed: statuses.count("failed"),
           pending: statuses.count("pending"),
-          total: total
+          backlog: backlog,
+          total: statuses.size - backlog
         }
       end
     end
@@ -49,7 +50,7 @@ module Features
     end
 
     def has_scenarios?
-      scenarios_count > 0
+      scenarios_count > 0 || execution_stats[:backlog] > 0
     end
   end
 end

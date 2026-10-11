@@ -8,7 +8,10 @@ class Scenario < ApplicationRecord
   has_many :steps, -> { order(:position) }, dependent: :destroy
   has_many :scenario_executions, dependent: :destroy
   acts_as_list scope: :feature
+  # A backlog scenario is written but not built yet: it keeps its runs, and is left out of every count and rate.
+  attribute :backlog, :boolean, default: -> { Gwirian.new_scenarios_in_backlog? }
   validates :title, presence: true, length: { maximum: 255 }
+  validates :backlog, inclusion: [ true, false ]
 
   settings index: { number_of_shards: 1 } do
     mappings dynamic: "false" do
@@ -41,6 +44,7 @@ class Scenario < ApplicationRecord
   end
 
   def current_status
+    return "backlog" if backlog?
     latest_execution&.status || "pending"
   end
 

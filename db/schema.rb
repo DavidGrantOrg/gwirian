@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_09_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
   create_table "features", force: :cascade do |t|
     t.string "title"
     t.text "description"
@@ -100,6 +100,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_09_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "position"
+    t.boolean "backlog", default: false, null: false
     t.index ["feature_id", "position"], name: "index_scenarios_on_feature_id_and_position"
     t.index ["feature_id"], name: "index_scenarios_on_feature_id"
   end

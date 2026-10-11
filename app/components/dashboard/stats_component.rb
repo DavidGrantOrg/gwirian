@@ -13,7 +13,11 @@ module Dashboard
     attr_reader :project
 
     def scenarios
-      @scenarios ||= project.scenarios.includes(:scenario_executions)
+      @scenarios ||= project.scenarios.where(backlog: false).includes(:scenario_executions)
+    end
+
+    def backlog_count
+      @backlog_count ||= project.scenarios.where(backlog: true).count
     end
 
     # Of the scenarios whose latest run passed or failed; nil until one has.
@@ -138,7 +142,7 @@ module Dashboard
     def scenario_pass_rate_for_period(start_time, end_time)
       # Get all scenarios that existed at the end of the period
       # (scenarios created before or at end_time)
-      period_scenarios = project.scenarios.where("scenarios.created_at <= ?", end_time).includes(:scenario_executions)
+      period_scenarios = project.scenarios.where(backlog: false).where("scenarios.created_at <= ?", end_time).includes(:scenario_executions)
 
       # For each scenario, find the latest execution before end_time
       # Using in-memory filtering to avoid N+1 queries since executions are eager loaded

@@ -94,7 +94,8 @@
                       :class="{
                         'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300': item.status === 'passed',
                         'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300': item.status === 'failed',
-                        'bg-stone-100 dark:bg-white/10 text-stone-600 dark:text-white/60': item.status === 'pending'
+                        'bg-stone-100 dark:bg-white/10 text-stone-600 dark:text-white/60': item.status === 'pending',
+                        'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300': item.status === 'backlog'
                       }"
                       class="shrink-0 text-xs font-medium px-1.5 py-0.5 rounded"
                     ></span>

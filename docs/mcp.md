@@ -108,6 +108,8 @@ A folder's name is unique among the folders beside it, and a folder can't be mov
 - `update_scenario` - Update a scenario
 - `delete_scenario` - Delete a scenario
 
+`create_scenario` and `update_scenario` accept a boolean `backlog`: a backlog scenario is written but not built, and is left out of every count and pass rate. Leaving it out of `create_scenario` follows the server's `NEW_SCENARIOS` setting, and leaving it out of `update_scenario` leaves it as it is. Every scenario tool returns it.
+
 ### Scenario Executions (Full CRUD)
 - `list_scenario_executions` - List executions for a scenario
 - `get_scenario_execution` - Get execution details

@@ -248,7 +248,7 @@ class ProjectsController < ApplicationController
   private
 
   def status_label_for(status)
-    { "passed" => "Passed", "failed" => "Failed", "pending" => "Pending" }.fetch(status, "Pending")
+    { "passed" => "Passed", "failed" => "Failed", "pending" => "Pending", "backlog" => I18n.t("status.backlog") }.fetch(status, "Pending")
   end
 
   def render_alert(message)

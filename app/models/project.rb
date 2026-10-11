@@ -184,6 +184,7 @@ class Project < ApplicationRecord
 
   def aggregate_status_from(statuses)
     return nil if statuses.empty?
+    return "backlog" if statuses.all?("backlog")
     return "failed" if statuses.include?("failed")
     return "pending" if statuses.include?("pending")
     "passed"

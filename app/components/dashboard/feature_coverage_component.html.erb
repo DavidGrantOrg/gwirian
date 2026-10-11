@@ -18,9 +18,13 @@
         <% unless runs_recorded? %>
         <a href="<%= feature_link(fs.feature) %>" class="flex items-center justify-between gap-4 px-5 py-2 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
           <span class="text-sm text-stone-900 dark:text-white/90 truncate"><%= fs.feature.title %></span>
+          <% if fs.all_backlog? %>
+            <%= render Shared::StatusComponent.new(status: "backlog", variant: :badge, size: :sm) %>
+          <% else %>
           <span class="text-xs text-stone-500 dark:text-stone-400 flex-shrink-0">
             <%= fs.total %> <%= t("dashboard.feature_coverage.scenarios") %>
           </span>
+          <% end %>
         </a>
         <% else %>
         <a href="<%= feature_link(fs.feature) %>" class="block px-5 py-3 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
@@ -31,9 +35,13 @@
                 <%= fs.feature.title %>
               </span>
             </div>
+            <% if fs.all_backlog? %>
+              <%= render Shared::StatusComponent.new(status: "backlog", variant: :badge, size: :sm) %>
+            <% else %>
             <span class="text-xs text-stone-500 dark:text-stone-400 flex-shrink-0">
               <%= fs.total %> <%= t("dashboard.feature_coverage.scenarios") %>
             </span>
+            <% end %>
           </div>
           
           <%# Stacked progress bar %>
@@ -70,8 +78,14 @@
                   <%= fs.pending %> <%= t("dashboard.feature_coverage.pending") %>
                 </span>
               <% end %>
+              <% if fs.backlog > 0 %>
+                <span class="flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                  <%= t("dashboard.feature_coverage.backlog", count: fs.backlog) %>
+                </span>
+              <% end %>
             </div>
-          <% else %>
+          <% elsif fs.backlog.zero? %>
             <div class="text-xs text-stone-500 dark:text-stone-500 italic">
               <%= t("dashboard.feature_coverage.no_scenarios") %>
             </div>
