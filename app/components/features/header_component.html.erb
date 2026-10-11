@@ -4,9 +4,11 @@
     <%= render Folders::BreadcrumbComponent.new(project: project, folder: folder, current: feature.title) %>
   <% end %>
   <div class="flex items-start justify-between gap-4 mb-2">
-    <div class="flex-1">
-      <p class="mb-1 text-xs font-mono text-stone-500 dark:text-white/55">F<%= feature.id %></p>
-      <%= render Features::TitleComponent.new(feature: feature, project: project) %>
+    <div class="flex-1 flex items-baseline gap-3">
+      <span class="flex-shrink-0 text-2xl font-medium font-mono text-stone-500 dark:text-white/60">F<%= feature.id %></span>
+      <div class="flex-1 min-w-0">
+        <%= render Features::TitleComponent.new(feature: feature, project: project) %>
+      </div>
     </div>
     <% if can_execute? %>
       <a

@@ -61,7 +61,7 @@
 
     <%= render Shared::StatusComponent.new(status: current_status, variant: :icon, size: :sm) %>
 
-    <span class="flex-shrink-0 text-xs font-mono text-stone-500 dark:text-white/55">S<%= scenario.id %></span>
+    <span class="flex-shrink-0 text-sm font-medium font-mono text-stone-600 dark:text-white/70">S<%= scenario.id %></span>
 
     <div class="flex-1 min-w-0">
       <%= render Scenarios::TitleComponent.new(scenario: scenario, feature: feature, project: project) %>
