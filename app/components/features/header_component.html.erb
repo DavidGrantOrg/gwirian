@@ -5,6 +5,7 @@
   <% end %>
   <div class="flex items-start justify-between gap-4 mb-2">
     <div class="flex-1">
+      <p class="mb-1 text-xs font-mono text-stone-500 dark:text-white/55">F<%= feature.id %></p>
       <%= render Features::TitleComponent.new(feature: feature, project: project) %>
     </div>
     <% if can_execute? %>
