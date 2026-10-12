@@ -61,8 +61,11 @@
 
     <%= render Shared::StatusComponent.new(status: current_status, variant: :icon, size: :sm) %>
 
-    <div class="flex-1 min-w-0">
-      <%= render Scenarios::TitleComponent.new(scenario: scenario, feature: feature, project: project) %>
+    <div class="flex-1 min-w-0 flex items-baseline gap-2">
+      <span class="flex-shrink-0 min-w-[5ch] text-sm font-medium font-mono text-stone-600 dark:text-white/70">S<%= scenario.id %></span>
+      <div class="flex-1 min-w-0">
+        <%= render Scenarios::TitleComponent.new(scenario: scenario, feature: feature, project: project) %>
+      </div>
     </div>
 
     <% if scenario.backlog? %>
