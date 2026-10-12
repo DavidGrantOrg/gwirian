@@ -52,6 +52,7 @@ Experience a lightning-fast interface built with the latest web technologies. Na
 - **Features**: Define BDD features with descriptions and backgrounds
 - **Folders**: Optionally file a project's features in folders and sub-folders
 - **Scenarios**: Create scenarios with Given/When/Then structure
+- **Numbers**: Each feature and scenario shows its id, as F8 and S9, the same id the REST API and MCP use
 - **Backlog**: Mark a scenario as written but not built yet; it shows a Backlog badge and is left out of every count and pass rate (see [docs/docker-deployment.md](docs/docker-deployment.md#new-scenarios-in-the-backlog))
 - **Steps**: Define detailed steps for each scenario
 - **Executions**: Track scenario execution status and history
