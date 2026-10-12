@@ -7,10 +7,16 @@ RSpec.describe "Feature and scenario numbers", type: :request do
   let(:project) { create(:project, workspace: workspace) }
   let!(:project_member) { create(:project_member, project: project, email: user.email_address, role: "editor") }
   let(:base) { "/#{workspace.slug}/projects/#{project.id}" }
+  # The decoys give the feature and the scenario different ids, so a number taken from the wrong record shows.
+  let!(:decoy) { create(:feature, project: project, title: "Stellar sync") }
   let!(:feature) { create(:feature, project: project, title: "Suggested orders") }
+  let!(:decoy_scenarios) { create_list(:scenario, 2, feature: decoy) }
   let!(:scenario) { create(:scenario, feature: feature, title: "Order a full case") }
 
-  before { sign_in_as(user) }
+  before do
+    expect(scenario.id).not_to eq(feature.id)
+    sign_in_as(user)
+  end
 
   def page_at(path)
     get path
@@ -19,8 +25,9 @@ RSpec.describe "Feature and scenario numbers", type: :request do
   end
 
   it "shows the feature's number on its card" do
-    card = page_at("#{base}/features").css("a").find { |a| a.text.include?("Suggested orders") }.text.squish
-    expect(card).to include("F#{feature.id} Suggested orders")
+    card = page_at("#{base}/features").css("[data-feature-card]").find { |c| c.at_css("h3").text.squish == "Suggested orders" }
+    expect(card).not_to be_nil
+    expect(card.text.squish).to include("F#{feature.id} Suggested orders")
   end
 
   describe "the feature page" do
