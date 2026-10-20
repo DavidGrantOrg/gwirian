@@ -3,6 +3,6 @@ class MagicLinkMailer < ApplicationMailer
     @magic_link = magic_link
     @user = @magic_link.user
 
-    mail to: @user.email_address, subject: "Your Gwirian code is #{@magic_link.code}"
+    mail to: @user.email_address, subject: "Your #{Gwirian.app_name} code is #{@magic_link.code}"
   end
 end

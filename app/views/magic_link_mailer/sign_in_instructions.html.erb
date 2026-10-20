@@ -2,12 +2,12 @@
   <%= render partial: 'shared/email_header' %>
 
   <div style="text-align: center; margin-bottom: 24px;">
-    <h1 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;">Gwirian verification code</h1>
+    <h1 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= Gwirian.app_name %> verification code</h1>
   </div>
 
   <p style="font-size: 1.1rem; color: #334155; margin-bottom: 16px;">Hello!</p>
 
-  <p style="color: #334155; margin-bottom: 24px;">Please enter this 6-character verification code on the Gwirian sign-in page:</p>
+  <p style="color: #334155; margin-bottom: 24px;">Please enter this 6-character verification code on the <%= Gwirian.app_name %> sign-in page:</p>
 
   <div style="text-align: center; margin: 32px 0; padding: 24px; background: #f8fafc; border-radius: 8px; border: 2px solid #e2e8f0;">
     <p style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #1e293b; margin: 0; font-family: 'Courier New', monospace;"><%= @magic_link.code %></p>
