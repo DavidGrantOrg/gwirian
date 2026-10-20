@@ -372,16 +372,21 @@ RSpec.describe "Api::V1::Scenarios", type: :request do
           expect(response).to have_http_status(:ok)
         end
 
-        it "returns success message" do
+        it "returns today's success message with the trash item and the Trash page" do
           delete "/api/v1/projects/#{project.id}/features/#{feature.id}/scenarios/#{scenario.id}", headers: api_headers(workspace_member.api_token)
           expect(response).to have_http_status(:ok)
-          expect(json_response["message"]).to eq("Scenario deleted successfully")
+          expect(json_response).to eq(
+            "message" => "Scenario deleted successfully",
+            "trashed_item_id" => TrashedItem.find_by!(item_type: "Scenario", item_id: scenario.id).id,
+            "trash_url" => "http://www.example.com/#{workspace.slug}/projects/#{project.id}/trash"
+          )
         end
 
-        it "scenario is actually deleted from database" do
+        it "moves the scenario to the Trash" do
           scenario_id = scenario.id
           delete "/api/v1/projects/#{project.id}/features/#{feature.id}/scenarios/#{scenario.id}", headers: api_headers(workspace_member.api_token)
           expect(Scenario.find_by(id: scenario_id)).to be_nil
+          expect(project.trashed_items.map(&:number)).to eq([ "S#{scenario_id}" ])
         end
 
         context "when scenario does not exist" do

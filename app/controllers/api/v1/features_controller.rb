@@ -38,11 +38,7 @@ class Api::V1::FeaturesController < Api::V1::ApiController
   def destroy
     authorize! :destroy, @feature
 
-    if @feature.destroy
-      render json: { message: "Feature deleted successfully" }, status: :ok
-    else
-      render json: { errors: @feature.errors.full_messages }, status: :unprocessable_entity
-    end
+    move_to_trash(@feature, "Feature deleted successfully")
   end
 
   private

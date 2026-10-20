@@ -39,11 +39,7 @@ class Api::V1::ScenariosController < Api::V1::ApiController
   def destroy
     authorize! :destroy, @scenario
 
-    if @scenario.destroy
-      render json: { message: "Scenario deleted successfully" }, status: :ok
-    else
-      render json: { errors: @scenario.errors.full_messages }, status: :unprocessable_entity
-    end
+    move_to_trash(@scenario, "Scenario deleted successfully")
   end
 
   private

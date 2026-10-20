@@ -41,4 +41,15 @@ class Api::V1::ApiController < ActionController::Base
   def set_project
     @project = accessible_projects.find(params[:project_id])
   end
+
+  def move_to_trash(record, message)
+    item = Trash.move!(record, by: current_user)
+    render json: {
+      message: message,
+      trashed_item_id: item.id,
+      trash_url: project_trashed_items_url(@project, script_name: "/#{@project.workspace.slug}")
+    }, status: :ok
+  rescue ActiveRecord::RecordNotDestroyed => e
+    render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
+  end
 end
