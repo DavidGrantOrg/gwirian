@@ -28,7 +28,9 @@ module Features
     end
 
     def confirmation_message
-      "Are you sure you want to delete this feature?"
+      count = @feature.scenarios.size
+      subject = count.zero? ? "F#{@feature.id}" : "F#{@feature.id} and its #{helpers.pluralize(count, 'scenario')}"
+      "Move #{subject} to the Trash?"
     end
 
     private
