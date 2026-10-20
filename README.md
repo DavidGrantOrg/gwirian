@@ -81,7 +81,7 @@ Folders are identified by id everywhere, so renaming or moving one changes nothi
 
 Deleting a feature or scenario, from the page, the REST API or MCP, moves it to the project's Trash rather than destroying it.
 
-- **Trash page**: **Trash** in the project navigation lists deleted items newest first, with who deleted each and when. **Restore** brings an item back under its old number: a feature with its scenarios in order, their steps, its tags and every run; a scenario at its old place among its feature's scenarios. **Download snapshot** saves the item's rows as JSON. **Delete forever** removes it for good, a feature with the scenarios of it that were trashed on their own.
+- **Trash page**: **Trash** in the project navigation lists deleted items newest first, with who deleted each and when; an item's title opens it as Gherkin, a feature with all its scenarios. **Restore** brings an item back under its old number: a feature with its scenarios in order, their steps, its tags and every run; a scenario at its old place among its feature's scenarios. **Download snapshot** saves the item's rows as JSON. **Delete forever** removes it for good, a feature with the scenarios of it that were trashed on their own.
 - **Who may**: anyone in the project sees the Trash; an editor or administrator restores, downloads and deletes forever.
 - **Refusals**: a scenario whose feature is in the Trash too waits until the feature is restored; a feature whose folder has gone comes back unfiled.
 - **REST API**: the feature and scenario DELETE responses add `trashed_item_id` and `trash_url`.

@@ -1,7 +1,7 @@
 class TrashController < ApplicationController
   before_action :require_workspace
   before_action :set_project
-  before_action :set_item, only: [ :restore, :destroy, :download ]
+  before_action :set_item, only: [ :show, :restore, :destroy, :download ]
 
   rescue_from CanCan::AccessDenied do
     head :forbidden
@@ -12,6 +12,12 @@ class TrashController < ApplicationController
     @pagy, @items = pagy(@project.trashed_items.listing.includes(:trashed_by).order(created_at: :desc, id: :desc), limit: 50)
     feature_ids = @items.select { |item| item.item_type == "Feature" }.map(&:item_id)
     @trashed_scenario_counts = @project.trashed_items.where(item_type: "Scenario", feature_id: feature_ids).group(:feature_id).count
+  end
+
+  def show
+    authorize! :read, @item
+    @gherkin = Trash.gherkin(@item)
+    @trashed_scenarios = @project.trashed_items.where(item_type: "Scenario", feature_id: @item.item_id).count if @item.item_type == "Feature"
   end
 
   def restore

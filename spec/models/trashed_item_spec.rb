@@ -14,10 +14,17 @@ RSpec.describe TrashedItem do
     expect([ listed[feature_item.id].snapshot_scenario_ids, listed[scenario_item.id].snapshot_scenario_ids ]).to eq([ [ scenarios.second.id ], [] ])
   end
 
-  # Without the listing scope the ids are not loaded, and an empty list would undercount Delete forever's confirm.
-  it "refuses to list snapshot scenarios for an item not loaded through the listing scope" do
+  it "lists a feature's snapshot scenarios from the payload when loaded in full" do
+    scenarios = create_list(:scenario, 2, feature: feature)
     item = Trash.move!(feature, by: user)
 
-    expect { TrashedItem.find(item.id).snapshot_scenario_ids }.to raise_error(KeyError)
+    expect(TrashedItem.find(item.id).snapshot_scenario_ids).to eq(scenarios.map(&:id))
+  end
+
+  # Loaded with neither the ids nor the payload, an empty list would undercount Delete forever's confirm.
+  it "refuses to list snapshot scenarios for an item loaded with neither" do
+    item = Trash.move!(feature, by: user)
+
+    expect { TrashedItem.select(:id, :item_type).find(item.id).snapshot_scenario_ids }.to raise_error(ActiveModel::MissingAttributeError)
   end
 end

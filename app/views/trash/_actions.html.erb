@@ -1,0 +1,9 @@
+<div class="flex items-center justify-end gap-2">
+  <%= button_to "Restore", restore_project_trashed_item_path(@project, item), class: "btn btn-sm btn-primary" %>
+  <%= link_to "Download snapshot", download_project_trashed_item_path(@project, item), class: "btn btn-sm btn-ghost", "hx-boost" => "false" %>
+  <%= button_to "Delete forever", project_trashed_item_path(@project, item),
+        method: :delete,
+        "x-data": "{}",
+        "@click.prevent": "showConfirmation(#{delete_forever_message(item, trashed_scenarios: trashed_scenarios).to_json}).then(result => { if (result.isConfirmed) $el.closest('form').submit() })",
+        class: "btn btn-sm btn-danger" %>
+</div>

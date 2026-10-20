@@ -86,6 +86,19 @@ module Trash
       end
     end
 
+    # The item as Gherkin, built from its snapshot without saving anything.
+    def gherkin(item)
+      rows = item.payload
+      scenarios = in_position_order(rows.fetch("scenarios")).map { |attributes| build(Scenario, attributes) }
+      return scenarios.first.to_gherkin if item.item_type == "Scenario"
+
+      feature = build(Feature, rows.fetch("features").first)
+      feature.tag_list = rows.fetch("taggings").select { |row| row["taggable_type"] == "Feature" }.sort_by { |row| row["id"] }.map { |row| row["tag_name"] }
+      feature.association(:scenarios).target = scenarios
+      feature.association(:scenarios).loaded!
+      feature.to_gherkin
+    end
+
     private
 
     def snapshot(record)
