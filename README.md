@@ -329,6 +329,9 @@ ELASTICSEARCH_URL=http://localhost:9200
 # Application
 SECRET_KEY_BASE=your_secret_key_here
 RAILS_ENV=development
+
+# Optional: the name users see in pages, mails, error pages and the MCP server name (default: Gwirian)
+APP_NAME=Gwirian
 ```
 
 ### Configuration Files
