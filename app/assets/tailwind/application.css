@@ -334,7 +334,7 @@ html { font-size: 106.25%; }
   }
 
   .auth-form-section {
-    @apply w-full lg:w-5/12 flex items-center justify-center p-8;
+    @apply relative w-full lg:w-5/12 flex items-center justify-center p-8;
   }
 
   .auth-preview-section {

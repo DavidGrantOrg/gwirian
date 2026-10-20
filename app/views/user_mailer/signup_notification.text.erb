@@ -2,10 +2,10 @@ New User Signup
 
 Hello!
 
-A new user has signed up for Gwirian:
+A new user has signed up for <%= Gwirian.app_name %>:
 
 Email: <%= @user.email_address %>
 Signup time: <%= @user.created_at.strftime('%Y-%m-%d %H:%M:%S') %>
 
 ---
-© <%= Time.current.year %> Gwirian. All rights reserved.
+© <%= Time.current.year %> <%= Gwirian.app_name %>. All rights reserved.

@@ -4,7 +4,7 @@
   <% if @projects.empty? && can?(:create, Project) %>
     <div x-show="!onboardingDismissed" x-cloak class="mb-6 rounded-lg border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-stone-900/50 px-4 py-3 flex items-start gap-3 empty-state-entrance">
       <p class="text-sm text-stone-700 dark:text-white/80 flex-1">
-        <span class="font-medium">New to Gwirian?</span> Create a project to add features and scenarios, then run and record test results.
+        <span class="font-medium">New to <%= Gwirian.app_name %>?</span> Create a project to add features and scenarios, then run and record test results.
       </p>
       <button type="button" @click="localStorage.setItem('gwirian-onboarding-projects', 'true'); onboardingDismissed = true" class="btn btn-ghost btn-sm flex-shrink-0" aria-label="Dismiss">Got it</button>
     </div>

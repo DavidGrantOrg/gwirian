@@ -1,7 +1,7 @@
 class UserMailer < ApplicationMailer
   def welcome(user)
     @user = user
-    mail(to: @user.email_address, subject: "Welcome to Gwirian")
+    mail(to: @user.email_address, subject: "Welcome to #{Gwirian.app_name}")
   end
 
   def signup_notification(user)

@@ -2,14 +2,17 @@
 
 module Mcp
   class Server
-    SERVER_NAME = "Gwirian MCP Server"
     SERVER_VERSION = "1.0.0"
+
+    def self.server_name
+      "#{Gwirian.app_name} MCP Server"
+    end
 
     # A server per request: MCP::Server reads server_context when a tool runs, so a shared
     # instance lets one request's user leak into another request handled at the same time.
     def self.build(server_context:)
       ::MCP::Server.new(
-        name: SERVER_NAME,
+        name: server_name,
         version: SERVER_VERSION,
         server_context: server_context,
         tools: [

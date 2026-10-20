@@ -61,6 +61,18 @@ You can then plug all your SMTP settings from that provider into Gwirian via the
 
 You can find out more about all these settings in the [Rails Action Mailer documentation](https://guides.rubyonrails.org/action_mailer_basics.html#action-mailer-configuration).
 
+#### App name
+
+`APP_NAME` is the name your users see, in place of Gwirian: in the navbar, page titles, sign-in pages, mails, error pages and the MCP server's name.
+Unset or blank, it is Gwirian, and nothing changes.
+
+```sh
+docker run --env APP_NAME=Playbook ...
+```
+
+The sender's display name comes from `MAILER_FROM_ADDRESS`, so set that too, for example `"Playbook <support@example.com>"`.
+The logo is not changed.
+
 #### Background jobs
 
 Gwirian sends its email from background jobs, run by [Solid Queue](https://github.com/rails/solid_queue).

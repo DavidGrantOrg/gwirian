@@ -4,7 +4,10 @@ class ApplicationController < ActionController::Base
   include Pagy::Method
 
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
-  allow_browser versions: :modern
+  # block: is a keyword; a trailing Ruby block would be silently ignored.
+  allow_browser versions: :modern, block: -> {
+    render html: Gwirian.public_page("406-unsupported-browser").html_safe, layout: false, status: :not_acceptable
+  }
   add_flash_types :error
 
   before_action :track_workspace_access
