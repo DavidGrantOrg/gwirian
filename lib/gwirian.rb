@@ -10,6 +10,25 @@ module Gwirian
       ENV["APP_NAME"].to_s.squish.presence || "Gwirian"
     end
 
+    def renamed?
+      !app_name.casecmp?("Gwirian")
+    end
+
+    # The static error pages in public/, with the name in their title, logo and 406 sentence following APP_NAME.
+    def public_page(name)
+      path = Rails.public_path.join("#{name}.html")
+      html = path.read
+      return html unless renamed?
+
+      escaped = ERB::Util.html_escape(app_name)
+      html.gsub(%r{ - Gwirian</title>|alt="Gwirian"|<span>Gwirian</span>|continue using Gwirian\.}) do |match|
+        match.sub("Gwirian") { escaped }
+      end
+    rescue Errno::ENOENT
+      Rails.logger.error("Error page #{path} is missing")
+      raise
+    end
+
     def configure_bundle
       if saas?
         ENV["BUNDLE_GEMFILE"] = "Gemfile.saas"
