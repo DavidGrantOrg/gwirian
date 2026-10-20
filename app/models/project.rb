@@ -5,6 +5,7 @@ class Project < ApplicationRecord
   # After features, so no feature still points at a folder; one DELETE, so parent links
   # between the folders don't matter.
   has_many :folders, dependent: :delete_all
+  has_many :trashed_items, dependent: :delete_all
   has_many :scenarios, through: :features
   has_many :scenario_executions, through: :scenarios
 

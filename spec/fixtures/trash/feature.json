@@ -1,0 +1,19 @@
+{
+  "schema_version": 20261019120000,
+  "features": [
+    { "id": 900001, "title": "Suggested orders", "description": null, "created_at": "2026-10-19 12:00:00.123456", "updated_at": "2026-10-19 12:00:00.123456", "project_id": 900001, "background": null, "folder_id": null }
+  ],
+  "scenarios": [
+    { "id": 900001, "feature_id": 900001, "title": "Order a full case", "given": "a store", "when": "it orders", "then": "it gets a case", "created_at": "2026-10-19 12:00:01.000001", "updated_at": "2026-10-19 12:00:01.000001", "position": 1, "backlog": 0 }
+  ],
+  "steps": [
+    { "id": 900001, "scenario_id": 900001, "action": "Given a store", "created_at": "2026-10-19 12:00:02.000002", "updated_at": "2026-10-19 12:00:02.000002", "position": 1 }
+  ],
+  "scenario_executions": [
+    { "id": 900001, "scenario_id": 900001, "user_id": 900001, "status": "passed", "notes": null, "executed_at": "2026-10-19 12:00:03.000003", "created_at": "2026-10-19 12:00:03.000003", "updated_at": "2026-10-19 12:00:03.000003" }
+  ],
+  "taggings": [
+    { "id": 900001, "tag_id": 1, "taggable_type": "Feature", "taggable_id": 900001, "tagger_type": null, "tagger_id": null, "context": "tags", "created_at": "2026-10-19 12:00:00.123456", "tenant": null, "tag_name": "P1" },
+    { "id": 900002, "tag_id": 2, "taggable_type": "ScenarioExecution", "taggable_id": 900001, "tagger_type": null, "tagger_id": null, "context": "tags", "created_at": "2026-10-19 12:00:03.000003", "tenant": null, "tag_name": "nightly" }
+  ]
+}
