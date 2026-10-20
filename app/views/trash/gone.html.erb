@@ -1,0 +1,7 @@
+<% content_for :title, "Trash - #{@project.name}" %>
+
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <%= render Shared::PageHeaderComponent.new(title: "Trash") %>
+  <p class="mb-4 text-sm text-stone-600 dark:text-stone-300"><%= Trash::Gone.new.message %></p>
+  <%= link_to "Back to the Trash", project_trashed_items_path(@project), class: "btn btn-ghost" %>
+</div>

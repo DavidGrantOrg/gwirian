@@ -30,6 +30,8 @@ module Mcp
           Mcp::Tools::CreateScenario,
           Mcp::Tools::UpdateScenario,
           Mcp::Tools::DeleteScenario,
+          Mcp::Tools::ListTrashedItems,
+          Mcp::Tools::RestoreTrashedItem,
           Mcp::Tools::ListScenarioExecutions,
           Mcp::Tools::GetScenarioExecution,
           Mcp::Tools::CreateScenarioExecution,

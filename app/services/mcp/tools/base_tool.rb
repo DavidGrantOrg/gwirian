@@ -17,6 +17,17 @@ module Mcp
         { "folder_id" => feature.folder_id, "folder_path" => folder&.path_label }
       end
 
+      # The token's workspace; a record in another workspace is not found, even for a user in both.
+      def self.workspace_projects(server_context)
+        Project.where(workspace: server_context[:current_workspace])
+      end
+
+      # A refused restore keeps its reason code stable, and gives the request id to find in the logs.
+      def self.trash_refused_result(error, server_context)
+        message = error.next_call ? "#{error.message.delete_suffix('.')}: #{error.next_call}" : error.message
+        error_result(message, code: -32005, reason: error.code, request_id: server_context[:request_id])
+      end
+
       def self.authorize!(user, action, subject)
         ability = Ability.new(user)
         ability.authorize!(action, subject)
@@ -42,18 +53,19 @@ module Mcp
         } ])
       end
 
-      def self.error_result(message, code: -32000)
+      def self.error_result(message, code: -32000, **details)
         error_data = {
           error: {
             code: code,
-            message: message
+            message: message,
+            **details
           }
         }
 
         MCP::Tool::Response.new([ {
           type: "text",
           text: error_data.to_json
-        } ])
+        } ], error: true)
       end
 
       def self.safe_user_email(user)
@@ -65,7 +77,8 @@ module Mcp
       rescue CanCan::AccessDenied => e
         error_result("Access denied: #{e.message}", code: -32001)
       rescue ActiveRecord::RecordNotFound => e
-        error_result("Record not found: #{e.message}", code: -32002)
+        # Not e.message: on a scoped lookup Rails appends the query's WHERE clause.
+        error_result([ "Record not found", [ e.model, e.id ].compact.join(" ").presence ].compact.join(": "), code: -32002)
       rescue ActiveRecord::RecordInvalid => e
         error_result("Validation failed: #{e.record.errors.full_messages.join(', ')}", code: -32003)
       rescue ArgumentError => e

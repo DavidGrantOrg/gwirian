@@ -66,15 +66,15 @@ class FeaturesController < ApplicationController
   def destroy
     authorize! :destroy, @feature
 
-    @feature.destroy
+    Trash.move!(@feature, by: current_user)
 
     if htmx_request?
-      @features = @project.features.where(folder_id: @feature.folder_id).order(:title)
+      @features = @project.features.where(folder_id: @feature.folder_id).order(:title).includes(scenarios: :scenario_executions)
       render partial: "features/features", locals: {
-        features: @features, project: @project, in_folders: @project.folders.exists?, notice: "Feature deleted successfully"
+        features: @features, project: @project, in_folders: @project.folders.exists?, notice: "Moved to Trash."
       }
     else
-      redirect_to project_features_path(@project), notice: "Feature deleted successfully"
+      redirect_to project_features_path(@project), notice: "Moved to Trash."
     end
   end
 

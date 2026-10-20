@@ -54,6 +54,7 @@ Experience a lightning-fast interface built with the latest web technologies. Na
 - **Scenarios**: Create scenarios with Given/When/Then structure
 - **Numbers**: Each feature and scenario shows its id, as F8 and S9, the same id the REST API and MCP use
 - **Backlog**: Mark a scenario as written but not built yet; it shows a Backlog badge and is left out of every count and pass rate (see [docs/docker-deployment.md](docs/docker-deployment.md#new-scenarios-in-the-backlog))
+- **Trash**: A deleted feature or scenario goes to its project's Trash, and Restore brings it back under its number with its scenarios, steps, tags and runs
 - **Steps**: Define detailed steps for each scenario
 - **Executions**: Track scenario execution status and history
 - **Tags**: Organize features and scenarios with flexible tagging
@@ -75,6 +76,18 @@ Folders are optional: a project without any looks and behaves as it always has.
 - **BDD export**: a foldered feature's file goes in its folder's directories (`ordering/suggested-orders/reorder.feature`); unfiled features stay at the top.
 
 Folders are identified by id everywhere, so renaming or moving one changes nothing for a caller.
+
+## Trash
+
+Deleting a feature or scenario, from the page, the REST API or MCP, moves it to the project's Trash rather than destroying it.
+
+- **Trash page**: **Trash** in the project navigation lists deleted items newest first, with who deleted each and when. **Restore** brings an item back under its old number: a feature with its scenarios in order, their steps, its tags and every run; a scenario at its old place among its feature's scenarios. **Download snapshot** saves the item's rows as JSON. **Delete forever** removes it for good, a feature with the scenarios of it that were trashed on their own.
+- **Who may**: anyone in the project sees the Trash; an editor or administrator restores, downloads and deletes forever.
+- **Refusals**: a scenario whose feature is in the Trash too waits until the feature is restored; a feature whose folder has gone comes back unfiled.
+- **REST API**: the feature and scenario DELETE responses add `trashed_item_id` and `trash_url`.
+- **MCP**: `delete_feature` and `delete_scenario` return `trashed_item_id`; `list_trashed_items` and `restore_trashed_item` (see [docs/mcp.md](docs/mcp.md#recovering-a-delete)).
+
+Nothing in the Trash expires. Deleting a project, workspace, folder, step or execution is not undone by the Trash. In SaaS mode a restore does not check the plan's feature and scenario limits.
 
 ## Architecture Overview
 

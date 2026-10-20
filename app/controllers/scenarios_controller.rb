@@ -52,12 +52,12 @@ class ScenariosController < ApplicationController
 
   def destroy
     authorize! :destroy, @scenario
-    @scenario.destroy!
+    Trash.move!(@scenario, by: current_user)
 
     if htmx_request?
       head :ok
     else
-      redirect_to project_feature_path(@project, @feature), notice: "Scenario deleted successfully"
+      redirect_to project_feature_path(@project, @feature), notice: "Moved to Trash."
     end
   end
 

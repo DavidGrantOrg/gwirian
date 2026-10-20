@@ -425,16 +425,34 @@ RSpec.describe "Api::V1::Features", type: :request do
           expect(response).to have_http_status(:ok)
         end
 
-        it "returns success message" do
+        it "returns today's success message with the trash item and the Trash page" do
           delete "/api/v1/projects/#{project.id}/features/#{feature.id}", headers: api_headers(workspace_member.api_token)
           expect(response).to have_http_status(:ok)
-          expect(json_response["message"]).to eq("Feature deleted successfully")
+          expect(json_response).to eq(
+            "message" => "Feature deleted successfully",
+            "trashed_item_id" => TrashedItem.find_by!(item_type: "Feature", item_id: feature.id).id,
+            "trash_url" => "http://www.example.com/#{workspace.slug}/projects/#{project.id}/trash"
+          )
         end
 
-        it "feature is actually deleted from database" do
+        it "answers a refused delete with its errors, as before, and keeps the feature" do
+          allow_any_instance_of(Feature).to receive(:destroy!) do |record|
+            record.errors.add(:base, "Feature is locked")
+            raise ActiveRecord::RecordNotDestroyed.new("Failed to destroy", record)
+          end
+
+          delete "/api/v1/projects/#{project.id}/features/#{feature.id}", headers: api_headers(workspace_member.api_token)
+
+          expect(response).to have_http_status(:unprocessable_content)
+          expect(json_response).to eq("errors" => [ "Feature is locked" ])
+          expect(Feature.exists?(feature.id)).to be(true)
+        end
+
+        it "moves the feature to the Trash" do
           feature_id = feature.id
           delete "/api/v1/projects/#{project.id}/features/#{feature.id}", headers: api_headers(workspace_member.api_token)
           expect(Feature.find_by(id: feature_id)).to be_nil
+          expect(project.trashed_items.map(&:number)).to eq([ "F#{feature_id}" ])
         end
 
         context "when feature does not exist" do
