@@ -10,4 +10,10 @@ RSpec.describe Mcp::Server do
       expect(Mcp::Server.server_name).to eq("Playbook MCP Server")
     end
   end
+
+  describe ".build" do
+    it "names the per-request server after APP_NAME", env: { "APP_NAME" => "Playbook" } do
+      expect(Mcp::Server.build(server_context: {}).name).to eq("Playbook MCP Server")
+    end
+  end
 end
