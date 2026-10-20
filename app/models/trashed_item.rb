@@ -14,7 +14,10 @@ class TrashedItem < ApplicationRecord
     "#{item_type.first}#{item_id}"
   end
 
+  # From the listing scope's column, or else the payload; with neither loaded, payload raises.
   def snapshot_scenario_ids
-    JSON.parse(attributes.fetch("snapshot_scenario_ids"))
+    return JSON.parse(self[:snapshot_scenario_ids]) if has_attribute?(:snapshot_scenario_ids)
+
+    item_type == "Feature" ? payload.fetch("scenarios").map { |row| row["id"] } : []
   end
 end

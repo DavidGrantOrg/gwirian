@@ -227,12 +227,62 @@ RSpec.describe "The Trash", type: :request do
     expect(link["href"]).to eq("#{base}/trash")
   end
 
+  describe "reading a trashed item" do
+    before { second.update!(given: "a store", when: "it orders singles", then: "it gets six") }
+
+    it "shows a trashed scenario's whole text, from the title on its Trash row" do
+      delete "#{base}/features/#{feature.id}/scenarios/#{second.id}", headers: htmx
+      link = trash_row("S#{second.id}").css("a").find { |a| a.text.squish == "Order singles" }
+
+      page = page_at(link["href"])
+
+      expect(page.at_css("pre").text).to eq("Scenario: Order singles\n  Given a store\n  When it orders singles\n  Then it gets six")
+      expect(page.text.squish).to include("S#{second.id} Order singles", "in F#{feature.id}", "david@example.com")
+    end
+
+    it "shows a trashed feature with its tags and every scenario in order" do
+      delete "#{base}/features/#{feature.id}", headers: htmx
+
+      text = page_at("#{base}/trash/#{item_id(trash_row("F#{feature.id}"))}").at_css("pre").text
+
+      expect(text).to start_with("@P1 @ordering\nFeature: Suggested orders\n  A test feature description\n")
+      expect(text.scan(/^  Scenario: (.+)$/).flatten).to eq([ "Order a full case", "Order singles", "Order a mixed case" ])
+      expect(text).to include("    Given a store\n    When it orders singles\n    Then it gets six")
+    end
+
+    it "offers an editor Restore, Download snapshot and Delete forever there" do
+      delete "#{base}/features/#{feature.id}/scenarios/#{second.id}", headers: htmx
+
+      page = page_at("#{base}/trash/#{item_id(trash_row("S#{second.id}"))}")
+
+      expect(page.css("button, a").map { |b| b.text.squish }).to include("Restore", "Download snapshot", "Delete forever")
+    end
+
+    it "answers 404 for an item no longer in the Trash" do
+      delete "#{base}/features/#{feature.id}/scenarios/#{second.id}", headers: htmx
+      id = item_id(trash_row("S#{second.id}"))
+      post "#{base}/trash/#{id}/restore"
+
+      get "#{base}/trash/#{id}"
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).to include("That item is no longer in the Trash.")
+    end
+  end
+
   context "as a viewer" do
     let(:role) { "viewer" }
     let!(:item) { Trash.move!(feature, by: user) }
 
     it "sees the Trash, with no Restore, Download snapshot or Delete forever" do
       expect(trash_row("F#{feature.id}").css("button, a").map { |b| b.text.squish }).not_to include("Restore", "Download snapshot", "Delete forever")
+    end
+
+    it "reads an item, with no Restore, Download snapshot or Delete forever" do
+      page = page_at("#{base}/trash/#{item.id}")
+
+      expect(page.at_css("pre").text).to include("Feature: Suggested orders")
+      expect(page.css("button, a").map { |b| b.text.squish }).not_to include("Restore", "Download snapshot", "Delete forever")
     end
 
     it "may not restore, delete forever or download" do

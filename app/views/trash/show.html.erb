@@ -1,0 +1,19 @@
+<% content_for :title, "#{@item.number} - Trash - #{@project.name}" %>
+
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <%= render Shared::PageHeaderComponent.new(title: "#{@item.number} #{@item.title}", back_path: project_trashed_items_path(@project)) %>
+
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
+    <p class="text-sm text-stone-500 dark:text-stone-400">
+      <%= @item.item_type %><% if @item.feature_id %> in F<%= @item.feature_id %><% end %>,
+      deleted by <%= @item.trashed_by&.email_address || "Unknown" %> on <%= format_datetime(@item.created_at) %>
+    </p>
+    <% if can?(:restore, @item) %>
+      <%= render "trash/actions", item: @item, trashed_scenarios: @trashed_scenarios.to_i %>
+    <% end %>
+  </div>
+
+  <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-6 overflow-x-auto">
+    <pre class="text-sm font-mono whitespace-pre-wrap text-stone-800 dark:text-stone-200"><%= @gherkin %></pre>
+  </div>
+</div>
