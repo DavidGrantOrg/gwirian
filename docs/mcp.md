@@ -89,7 +89,7 @@ Project payloads include an optional `context` field (text) for test context: en
 - `get_feature` - Get feature details with executions
 - `create_feature` - Create a new feature
 - `update_feature` - Update an existing feature
-- `delete_feature` - Delete a feature
+- `delete_feature` - Move a feature, with its scenarios, steps and runs, to the project's Trash
 
 `create_feature` and `update_feature` accept `folder_id`; `null` puts the feature in Unfiled, and leaving `folder_id` out of `update_feature` leaves the feature where it is. `get_feature` and `list_features` return `folder_id` and `folder_path` (`"Ordering › Suggested orders"`, or `null` when Unfiled).
 
@@ -106,7 +106,7 @@ A folder's name is unique among the folders beside it, and a folder can't be mov
 - `get_scenario` - Get scenario details with executions
 - `create_scenario` - Create a new scenario
 - `update_scenario` - Update a scenario
-- `delete_scenario` - Delete a scenario
+- `delete_scenario` - Move a scenario, with its steps and runs, to the project's Trash
 
 `create_scenario` and `update_scenario` accept a boolean `backlog`: a backlog scenario is written but not built, and is left out of every count and pass rate. Leaving it out of `create_scenario` follows the server's `NEW_SCENARIOS` setting, and leaving it out of `update_scenario` leaves it as it is. Every scenario tool returns it.
 
@@ -118,6 +118,64 @@ A folder's name is unique among the folders beside it, and a folder can't be mov
 - `delete_scenario_execution` - Delete an execution
 
 Executions support an optional `tag_list` (comma-separated string) for test type (e.g. e2e, smoke), version, bugfix info, or other metadata. Create and update tools accept `tag_list`; list and get include `tag_list` in each execution.
+
+### Trash
+- `list_trashed_items` - List a project's Trash, newest first: `project_id`, with `limit` (default 50, at most 200) and `offset` (default 0)
+- `restore_trashed_item` - Bring a deleted feature or scenario back under its old number: `trashed_item_id`
+
+Nothing in the Trash expires. Emptying it is done on the project's Trash page (Delete forever); no tool does it. A deleted execution, folder, project or workspace does not go to the Trash.
+
+## Recovering a delete
+
+`delete_feature` and `delete_scenario` answer as before, plus the `trashed_item_id` that brings the item back:
+
+```json
+{"message": "Scenario deleted successfully", "id": 112, "trashed_item_id": 42}
+```
+
+Restore it with that id:
+
+```json
+{"name": "restore_trashed_item", "arguments": {"trashed_item_id": 42}}
+```
+
+```json
+{"item_type": "Scenario", "item_id": 112, "number": "S112", "project_id": 1, "feature_id": 19,
+ "message": "Restored S112.", "url": "https://your-domain.com/your-workspace/projects/1/features/19#scenario-112"}
+```
+
+A restored feature comes back with its number, its scenarios in their order, their steps, its tags, and every run with its tags. A scenario goes back to its old place among its feature's scenarios, or last when the list is now shorter. A feature whose folder has gone comes back unfiled, and `message` says so.
+
+Without the id, find it in the Trash:
+
+```json
+{"name": "list_trashed_items", "arguments": {"project_id": 1}}
+```
+
+```json
+{"total": 2, "items": [
+  {"trashed_item_id": 43, "item_type": "Feature", "item_id": 19, "number": "F19", "title": "Suggested orders",
+   "feature_id": null, "trashed_by": "david@example.com", "trashed_at": "2026-10-19T14:02:11Z", "scenario_numbers": ["S110", "S111"]},
+  {"trashed_item_id": 42, "item_type": "Scenario", "item_id": 112, "number": "S112", "title": "Order singles",
+   "feature_id": 19, "trashed_by": "david@example.com", "trashed_at": "2026-10-19T14:01:52Z", "scenario_numbers": []}
+]}
+```
+
+A refused restore comes back with `isError: true`, a `reason` that stays the same, and the request id to look for in the server's log. Here the scenario's feature went to the Trash after it, so the feature comes back first:
+
+```json
+{"error": {"code": -32005, "reason": "trash.feature_in_trash", "request_id": "6f1c…",
+ "message": "S112's feature F19 is in the Trash; restore it first: restore_trashed_item(trashed_item_id: 43)"}}
+```
+
+| `reason` | Why | What to do |
+|----------|-----|------------|
+| `trash.feature_in_trash` | The scenario's feature is in the Trash too. | Restore the feature with the call in the message, then the scenario. |
+| `trash.feature_gone` | The scenario's feature was deleted forever. | Download the scenario's snapshot from the Trash page. |
+| `trash.schema_incompatible` | The item was trashed before a migration that changed its tables. | Download its snapshot from the Trash page, or restore from a backup. |
+| `trash.gone` | Another restore or a Delete forever took the item first. | Nothing to restore; `list_trashed_items` shows what is left. |
+
+A `trashed_item_id` from another workspace, or one that never existed, gives `Record not found`.
 
 ## Testing the Connection
 

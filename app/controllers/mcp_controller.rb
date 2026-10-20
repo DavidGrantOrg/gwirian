@@ -47,7 +47,8 @@ class McpController < ActionController::Base
       current_user: current_user,
       current_workspace: Current.workspace,
       request_id: request.request_id,
-      ip_address: request.remote_ip
+      ip_address: request.remote_ip,
+      base_url: request.base_url
     }
   end
 end

@@ -17,6 +17,16 @@ module Mcp
         { "folder_id" => feature.folder_id, "folder_path" => folder&.path_label }
       end
 
+      # The token's workspace; a record in another workspace is not found, even for a user in both.
+      def self.workspace_projects(server_context)
+        Project.where(workspace: server_context[:current_workspace])
+      end
+
+      # A refused restore keeps its reason code stable, and gives the request id to find in the logs.
+      def self.trash_refused_result(error, server_context)
+        error_result(error.message, code: -32005, reason: error.code, request_id: server_context[:request_id])
+      end
+
       def self.authorize!(user, action, subject)
         ability = Ability.new(user)
         ability.authorize!(action, subject)
@@ -42,11 +52,12 @@ module Mcp
         } ])
       end
 
-      def self.error_result(message, code: -32000)
+      def self.error_result(message, code: -32000, **details)
         error_data = {
           error: {
             code: code,
-            message: message
+            message: message,
+            **details
           }
         }
 

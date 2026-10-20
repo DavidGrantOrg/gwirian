@@ -3,7 +3,8 @@
 module Mcp
   module Tools
     class DeleteScenario < BaseTool
-      description "Delete a scenario"
+      description "Move a scenario, with its steps and runs, to the project's Trash; " \
+        "restore_trashed_item with the trashed_item_id it returns brings it back"
 
       input_schema(
         {
@@ -11,7 +12,7 @@ module Mcp
           properties: {
             scenario_id: {
               type: "integer",
-              description: "The ID of the scenario to delete"
+              description: "The ID of the scenario to move to the Trash"
             }
           },
           required: [ "scenario_id" ]
@@ -28,14 +29,11 @@ module Mcp
       def self.call(scenario_id:, server_context:)
         handle_errors do
           current_user = server_context[:current_user]
-          scenario = Scenario.find_by(id: scenario_id)
+          scenario = Scenario.where(feature: Feature.where(project: workspace_projects(server_context))).find(scenario_id)
           authorize!(current_user, :destroy, scenario)
 
-          if scenario.destroy
-            success_result({ message: "Scenario deleted successfully", id: scenario_id })
-          else
-            error_result("Failed to delete scenario: #{scenario.errors.full_messages.join(', ')}", code: -32000)
-          end
+          item = Trash.move!(scenario, by: current_user)
+          success_result({ message: "Scenario deleted successfully", id: scenario_id, trashed_item_id: item.id })
         end
       end
     end
