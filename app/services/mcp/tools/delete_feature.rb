@@ -34,6 +34,8 @@ module Mcp
 
           item = Trash.move!(feature, by: current_user)
           success_result({ message: "Feature deleted successfully", id: feature_id, trashed_item_id: item.id })
+        rescue ActiveRecord::RecordNotDestroyed => e
+          error_result("Failed to delete feature: #{e.record.errors.full_messages.join(', ')}", code: -32000)
         end
       end
     end

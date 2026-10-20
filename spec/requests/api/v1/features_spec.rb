@@ -443,7 +443,7 @@ RSpec.describe "Api::V1::Features", type: :request do
 
           delete "/api/v1/projects/#{project.id}/features/#{feature.id}", headers: api_headers(workspace_member.api_token)
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(json_response).to eq("errors" => [ "Feature is locked" ])
           expect(Feature.exists?(feature.id)).to be(true)
         end

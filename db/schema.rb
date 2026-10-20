@@ -223,7 +223,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_120000) do
   add_foreign_key "sessions", "users"
   add_foreign_key "steps", "scenarios"
   add_foreign_key "taggings", "tags"
-  add_foreign_key "trashed_items", "projects"
+  add_foreign_key "trashed_items", "projects", on_delete: :cascade
   add_foreign_key "trashed_items", "users", column: "trashed_by_id", on_delete: :nullify
   add_foreign_key "workspace_members", "users"
   add_foreign_key "workspace_members", "workspaces"

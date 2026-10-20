@@ -87,7 +87,7 @@ Deleting a feature or scenario, from the page, the REST API or MCP, moves it to 
 - **REST API**: the feature and scenario DELETE responses add `trashed_item_id` and `trash_url`.
 - **MCP**: `delete_feature` and `delete_scenario` return `trashed_item_id`; `list_trashed_items` and `restore_trashed_item` (see [docs/mcp.md](docs/mcp.md#recovering-a-delete)).
 
-Nothing in the Trash expires. Deleting a project, workspace, folder, step or execution is not undone by the Trash.
+Nothing in the Trash expires. Deleting a project, workspace, folder, step or execution is not undone by the Trash. In SaaS mode a restore does not check the plan's feature and scenario limits.
 
 ## Architecture Overview
 

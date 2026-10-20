@@ -53,7 +53,13 @@ class TrashController < ApplicationController
     render_gone unless @item
   end
 
+  # The page's Restore buttons are htmx-boosted, and htmx swaps nothing on a 404, so an htmx
+  # request is sent back to the Trash, which shows why.
   def render_gone
+    if htmx_request?
+      flash[:trash_refusal] = Trash::Gone.new.message
+      response.headers["HX-Redirect"] = project_trashed_items_path(@project)
+    end
     render :gone, status: :not_found
   end
 end

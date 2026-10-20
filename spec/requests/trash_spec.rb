@@ -85,6 +85,21 @@ RSpec.describe "The Trash", type: :request do
       follow_redirect!
       expect(response.body).to include("Restored S#{second.id}.")
       expect(scenario_order(feature)).to eq([ first.id, second.id, third.id ])
+      expect(trash_rows).to be_empty
+    end
+
+    it "says it moved to the Trash after a delete without htmx" do
+      delete "#{base}/features/#{feature.id}/scenarios/#{second.id}"
+
+      expect(response).to redirect_to("#{base}/features/#{feature.id}")
+      follow_redirect!
+      expect(response.body).to include("Moved to Trash.")
+    end
+
+    it "names its feature on its Trash row" do
+      delete "#{base}/features/#{feature.id}/scenarios/#{second.id}", headers: htmx
+
+      expect(trash_row("S#{second.id}").text.squish).to include("Order singles in F#{feature.id}")
     end
 
     it "asks before moving it, naming the scenario" do
@@ -92,19 +107,33 @@ RSpec.describe "The Trash", type: :request do
       expect(response.body).to include("Move S#{second.id} to the Trash?")
     end
 
-    it "refuses while its feature is in the Trash, naming the feature's trash item" do
+    it "refuses while its feature is in the Trash, naming the feature to restore first" do
       delete "#{base}/features/#{feature.id}/scenarios/#{second.id}", headers: htmx
       delete "#{base}/features/#{feature.id}", headers: htmx
-      feature_item = item_id(trash_row("F#{feature.id}"))
 
       post "#{base}/trash/#{item_id(trash_row("S#{second.id}"))}/restore"
 
       expect(response).to redirect_to("#{base}/trash")
       follow_redirect!
-      expect(response.body).to include(
-        "S#{second.id}&#39;s feature F#{feature.id} is in the Trash; restore it first: restore_trashed_item(trashed_item_id: #{feature_item})"
-      )
+      expect(response.body).to include("S#{second.id}&#39;s feature F#{feature.id} is in the Trash; restore F#{feature.id} first.")
+      expect(response.body).not_to include("restore_trashed_item(")
     end
+  end
+
+  it "says a feature moved to the Trash after a delete without htmx" do
+    delete "#{base}/features/#{feature.id}"
+
+    expect(response).to redirect_to("#{base}/features")
+    follow_redirect!
+    expect(response.body).to include("Moved to Trash.")
+  end
+
+  it "asks before moving a feature with no scenarios, naming only the feature" do
+    empty = create(:feature, project: project, title: "Empty")
+
+    get "#{base}/features"
+
+    expect(response.body).to include("Move F#{empty.id} to the Trash?")
   end
 
   it "brings a feature back unfiled when its folder has gone, and says so" do
@@ -131,6 +160,15 @@ RSpec.describe "The Trash", type: :request do
       expect(response.body).to include("Delete F#{feature.id} and its 3 scenarios forever? This cannot be undone.")
     end
 
+    it "asks first for a scenario, naming only the scenario" do
+      get "#{base}/trash"
+      expect(response.body).to include("Delete S#{third.id} forever? This cannot be undone.")
+    end
+
+    it "offers an editor Restore, Download snapshot and Delete forever" do
+      expect(trash_row("F#{feature.id}").css("button, a").map { |b| b.text.squish }).to include("Restore", "Download snapshot", "Delete forever")
+    end
+
     it "removes the feature and its trashed scenarios from the Trash" do
       delete "#{base}/trash/#{item_id(trash_row("F#{feature.id}"))}"
 
@@ -151,10 +189,32 @@ RSpec.describe "The Trash", type: :request do
     expect(response.body).to include("That item is no longer in the Trash.")
   end
 
+  # The page's Restore buttons are htmx-boosted, and htmx swaps nothing on a 404.
+  it "sends an htmx Restore of a gone item back to the Trash, which says so" do
+    delete "#{base}/features/#{feature.id}", headers: htmx
+    id = item_id(trash_row("F#{feature.id}"))
+    post "#{base}/trash/#{id}/restore"
+
+    post "#{base}/trash/#{id}/restore", headers: htmx
+
+    expect(response).to have_http_status(:not_found)
+    expect(response.headers["HX-Redirect"]).to eq("#{base}/trash")
+    expect(page_at("#{base}/trash").text).to include("That item is no longer in the Trash.")
+  end
+
+  it "shows Unknown for an item whose deleter has gone" do
+    Trash.move!(feature, by: create(:user)).trashed_by.destroy!
+
+    expect(trash_row("F#{feature.id}").text).to include("Unknown")
+  end
+
   it "downloads an item's snapshot as JSON" do
     delete "#{base}/features/#{feature.id}", headers: htmx
+    # The layout boosts every link with htmx, which would swap the JSON into the page.
+    link = trash_row("F#{feature.id}").css("a").find { |a| a.text.squish == "Download snapshot" }
+    expect(link["hx-boost"]).to eq("false")
 
-    get "#{base}/trash/#{item_id(trash_row("F#{feature.id}"))}/download"
+    get link["href"]
 
     expect(response.media_type).to eq("application/json")
     snapshot = JSON.parse(response.body)
@@ -171,8 +231,8 @@ RSpec.describe "The Trash", type: :request do
     let(:role) { "viewer" }
     let!(:item) { Trash.move!(feature, by: user) }
 
-    it "sees the Trash" do
-      expect(trash_row("F#{feature.id}")).not_to be_nil
+    it "sees the Trash, with no Restore, Download snapshot or Delete forever" do
+      expect(trash_row("F#{feature.id}").css("button, a").map { |b| b.text.squish }).not_to include("Restore", "Download snapshot", "Delete forever")
     end
 
     it "may not restore, delete forever or download" do

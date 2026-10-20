@@ -36,6 +36,28 @@ RSpec.describe "MCP and the Trash", type: :request do
         "trashed_item_id" => TrashedItem.find_by!(item_type: "Feature", item_id: feature.id).id
       )
     end
+
+    it "gives a refused delete's reasons, as before" do
+      allow_any_instance_of(Feature).to receive(:destroy!) do |record|
+        record.errors.add(:base, "Feature is locked")
+        raise ActiveRecord::RecordNotDestroyed.new("Failed to destroy", record)
+      end
+
+      result = call_tool("delete_feature", { feature_id: feature.id })
+
+      expect(result["error"]).to eq("code" => -32000, "message" => "Failed to delete feature: Feature is locked")
+    end
+  end
+
+  it "gives a refused scenario delete's reasons, as before" do
+    allow_any_instance_of(Scenario).to receive(:destroy!) do |record|
+      record.errors.add(:base, "Scenario is locked")
+      raise ActiveRecord::RecordNotDestroyed.new("Failed to destroy", record)
+    end
+
+    result = call_tool("delete_scenario", { scenario_id: scenario.id })
+
+    expect(result["error"]).to eq("code" => -32000, "message" => "Failed to delete scenario: Scenario is locked")
   end
 
   describe "delete_scenario and restore_trashed_item" do
@@ -48,9 +70,45 @@ RSpec.describe "MCP and the Trash", type: :request do
       expect(restored).to eq(
         "item_type" => "Scenario", "item_id" => scenario.id, "number" => "S#{scenario.id}",
         "project_id" => project.id, "feature_id" => feature.id, "message" => "Restored S#{scenario.id}.",
-        "url" => "http://www.example.com/#{workspace.slug}/projects/#{project.id}/features/#{feature.id}#scenario-#{scenario.id}"
+        "url" => "http://www.example.com/#{workspace.slug}/projects/#{project.id}/features/#{feature.id}#scenario-wrapper-#{scenario.id}"
       )
       expect(call_tool("get_scenario", { scenario_id: scenario.id })["title"]).to eq("Order singles")
+    end
+  end
+
+  it "puts a deleted feature back with one call, and links to it" do
+    deleted = call_tool("delete_feature", { feature_id: feature.id })
+
+    restored = call_tool("restore_trashed_item", { trashed_item_id: deleted["trashed_item_id"] })
+
+    expect(restored).to eq(
+      "item_type" => "Feature", "item_id" => feature.id, "number" => "F#{feature.id}",
+      "project_id" => project.id, "feature_id" => feature.id, "message" => "Restored F#{feature.id}.",
+      "url" => "http://www.example.com/#{workspace.slug}/projects/#{project.id}/features/#{feature.id}"
+    )
+  end
+
+  it "gives a refusal with no call to make first its message as it is" do
+    item = call_tool("delete_scenario", { scenario_id: scenario.id })["trashed_item_id"]
+    feature.destroy!
+
+    result = call("restore_trashed_item", { trashed_item_id: item })
+
+    expect(result["isError"]).to be(true)
+    expect(JSON.parse(result.dig("content", 0, "text"))["error"].slice("code", "reason", "message")).to eq(
+      "code" => -32005, "reason" => "trash.feature_gone",
+      "message" => "S#{scenario.id}'s feature F#{feature.id} no longer exists; download its snapshot from the Trash."
+    )
+  end
+
+  context "in a project of this workspace the user is not in" do
+    let(:stranger_project) { create(:project, workspace: workspace) }
+    let!(:stranger_item) { Trash.move!(create(:feature, project: stranger_project), by: create(:user)) }
+
+    it "refuses to list or restore its Trash, and keeps the item" do
+      expect(call_tool("list_trashed_items", { project_id: stranger_project.id }).dig("error", "code")).to eq(-32001)
+      expect(call_tool("restore_trashed_item", { trashed_item_id: stranger_item.id }).dig("error", "code")).to eq(-32001)
+      expect(TrashedItem.exists?(stranger_item.id)).to be(true)
     end
   end
 
@@ -65,7 +123,7 @@ RSpec.describe "MCP and the Trash", type: :request do
       error = JSON.parse(result.dig("content", 0, "text"))["error"]
       expect(error.except("request_id")).to eq(
         "code" => -32005, "reason" => "trash.feature_in_trash",
-        "message" => "S#{scenario.id}'s feature F#{feature.id} is in the Trash; restore it first: restore_trashed_item(trashed_item_id: #{feature_item})"
+        "message" => "S#{scenario.id}'s feature F#{feature.id} is in the Trash; restore F#{feature.id} first: restore_trashed_item(trashed_item_id: #{feature_item})"
       )
       expect(error["request_id"]).to eq(response.request.request_id)
     end
@@ -92,10 +150,16 @@ RSpec.describe "MCP and the Trash", type: :request do
     it "pages with an offset, naming each scenario's feature" do
       result = call_tool("list_trashed_items", { project_id: project.id, limit: 2, offset: 2 })
 
-      expect(result["items"].map { |item| item.slice("number", "feature_id") }).to eq([
-        { "number" => "S#{full_case.id}", "feature_id" => feature.id },
-        { "number" => "S#{scenario.id}", "feature_id" => feature.id }
+      expect(result["items"].map { |item| item.slice("number", "feature_id", "scenario_numbers") }).to eq([
+        { "number" => "S#{full_case.id}", "feature_id" => feature.id, "scenario_numbers" => [] },
+        { "number" => "S#{scenario.id}", "feature_id" => feature.id, "scenario_numbers" => [] }
       ])
+    end
+
+    it "lists at least one item, at most 200, and treats a negative offset as none" do
+      expect(call_tool("list_trashed_items", { project_id: project.id, limit: 0, offset: -3 })["items"].map { |item| item["trashed_item_id"] })
+        .to eq([ items[4].id ])
+      expect(call_tool("list_trashed_items", { project_id: project.id, limit: 500 })["items"].size).to eq(5)
     end
   end
 
@@ -121,26 +185,27 @@ RSpec.describe "MCP and the Trash", type: :request do
       create(:project_member, project: other_project, email: user.email_address, role: "editor")
     end
 
+    # The message names the record, never the query that missed it.
     it "does not find that workspace's feature to delete" do
-      expect(call_tool("delete_feature", { feature_id: other_feature.id }).dig("error", "message")).to start_with("Record not found")
+      expect(call_tool("delete_feature", { feature_id: other_feature.id }).dig("error", "message")).to eq("Record not found: Feature #{other_feature.id}")
       expect(Feature.exists?(other_feature.id)).to be(true)
     end
 
     it "does not find that workspace's scenario to delete" do
       other_scenario = other_feature.scenarios.create!(title: "Elsewhere")
-      expect(call_tool("delete_scenario", { scenario_id: other_scenario.id }).dig("error", "message")).to start_with("Record not found")
+      expect(call_tool("delete_scenario", { scenario_id: other_scenario.id }).dig("error", "message")).to eq("Record not found: Scenario #{other_scenario.id}")
     end
 
     it "does not find that workspace's Trash to list" do
-      expect(call_tool("list_trashed_items", { project_id: other_project.id }).dig("error", "message")).to start_with("Record not found")
+      expect(call_tool("list_trashed_items", { project_id: other_project.id }).dig("error", "message")).to eq("Record not found: Project #{other_project.id}")
     end
 
     it "does not find that workspace's trash item to restore" do
-      expect(call_tool("restore_trashed_item", { trashed_item_id: other_item.id }).dig("error", "message")).to start_with("Record not found")
+      expect(call_tool("restore_trashed_item", { trashed_item_id: other_item.id }).dig("error", "message")).to eq("Record not found: TrashedItem #{other_item.id}")
     end
   end
 
   it "says a trash item that does not exist is not found" do
-    expect(call_tool("restore_trashed_item", { trashed_item_id: 999_999 }).dig("error", "message")).to start_with("Record not found")
+    expect(call_tool("restore_trashed_item", { trashed_item_id: 999_999 }).dig("error", "message")).to eq("Record not found: TrashedItem 999999")
   end
 end

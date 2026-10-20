@@ -34,6 +34,8 @@ module Mcp
 
           item = Trash.move!(scenario, by: current_user)
           success_result({ message: "Scenario deleted successfully", id: scenario_id, trashed_item_id: item.id })
+        rescue ActiveRecord::RecordNotDestroyed => e
+          error_result("Failed to delete scenario: #{e.record.errors.full_messages.join(', ')}", code: -32000)
         end
       end
     end

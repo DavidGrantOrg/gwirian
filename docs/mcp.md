@@ -78,6 +78,8 @@ Alternatively, you can pass it as a query parameter (though header is preferred)
 
 Once connected, you can use the following tools. All operations are scoped to the workspace associated with your API token:
 
+A tool that fails returns `isError: true`, with a text body `{"error": {"code": ..., "message": "..."}}`. The codes are -32001 (access denied), -32002 (record not found), -32003 (validation failed), -32004 (invalid argument), -32005 (a refused restore, see [Recovering a delete](#recovering-a-delete)) and -32000 (anything else).
+
 ### Projects (Read-only)
 - `list_projects` - List all accessible projects in the workspace
 - `get_project` - Get project details with executions, team members and folders
@@ -127,7 +129,7 @@ Nothing in the Trash expires. Emptying it is done on the project's Trash page (D
 
 ## Recovering a delete
 
-`delete_feature` and `delete_scenario` answer as before, plus the `trashed_item_id` that brings the item back:
+`delete_feature` and `delete_scenario` answer with the same success body as before, plus the `trashed_item_id` that brings the item back:
 
 ```json
 {"message": "Scenario deleted successfully", "id": 112, "trashed_item_id": 42}
@@ -141,7 +143,7 @@ Restore it with that id:
 
 ```json
 {"item_type": "Scenario", "item_id": 112, "number": "S112", "project_id": 1, "feature_id": 19,
- "message": "Restored S112.", "url": "https://your-domain.com/your-workspace/projects/1/features/19#scenario-112"}
+ "message": "Restored S112.", "url": "https://your-domain.com/your-workspace/projects/1/features/19#scenario-wrapper-112"}
 ```
 
 A restored feature comes back with its number, its scenarios in their order, their steps, its tags, and every run with its tags. A scenario goes back to its old place among its feature's scenarios, or last when the list is now shorter. A feature whose folder has gone comes back unfiled, and `message` says so.
@@ -165,17 +167,18 @@ A refused restore comes back with `isError: true`, a `reason` that stays the sam
 
 ```json
 {"error": {"code": -32005, "reason": "trash.feature_in_trash", "request_id": "6f1c…",
- "message": "S112's feature F19 is in the Trash; restore it first: restore_trashed_item(trashed_item_id: 43)"}}
+ "message": "S112's feature F19 is in the Trash; restore F19 first: restore_trashed_item(trashed_item_id: 43)"}}
 ```
 
 | `reason` | Why | What to do |
 |----------|-----|------------|
 | `trash.feature_in_trash` | The scenario's feature is in the Trash too. | Restore the feature with the call in the message, then the scenario. |
-| `trash.feature_gone` | The scenario's feature was deleted forever. | Download the scenario's snapshot from the Trash page. |
-| `trash.schema_incompatible` | The item was trashed before a migration that changed its tables. | Download its snapshot from the Trash page, or restore from a backup. |
-| `trash.gone` | Another restore or a Delete forever took the item first. | Nothing to restore; `list_trashed_items` shows what is left. |
+| `trash.feature_gone` | The scenario's feature no longer exists, or its number now belongs to a different feature. | Download the scenario's snapshot from the Trash page. |
+| `trash.schema_incompatible` | The item was trashed before a migration that changed its tables, or under a newer schema than the running database's. | Download its snapshot from the Trash page, or restore from a backup. |
+| `trash.conflict` | Another row has taken one of the item's ids, after a migration rebuilt its table. | Download its snapshot from the Trash page. |
+| `trash.gone` | Another restore or a Delete forever took the item while this call was running. | Nothing to restore; `list_trashed_items` shows what is left. |
 
-A `trashed_item_id` from another workspace, or one that never existed, gives `Record not found`.
+A `trashed_item_id` from another workspace, one already restored or deleted forever, or one that never existed, gives `Record not found: TrashedItem 42` (-32002). So does a `feature_id` or `scenario_id` outside the token's workspace given to `delete_feature` or `delete_scenario`, which used to give `Access denied`.
 
 ## Testing the Connection
 

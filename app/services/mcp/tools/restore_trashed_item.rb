@@ -50,7 +50,7 @@ module Mcp
       def self.url_for(restored, server_context)
         url = "#{server_context[:base_url]}/#{server_context[:current_workspace].slug}" \
           "/projects/#{restored.project_id}/features/#{restored.feature_id}"
-        restored.item_type == "Scenario" ? "#{url}#scenario-#{restored.item_id}" : url
+        restored.item_type == "Scenario" ? "#{url}#scenario-wrapper-#{restored.item_id}" : url
       end
     end
   end

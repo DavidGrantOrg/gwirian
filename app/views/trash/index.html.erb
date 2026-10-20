@@ -18,9 +18,10 @@
         <table class="min-w-full">
           <thead>
             <tr class="border-b border-stone-200 dark:border-stone-800">
-              <% [ "Type", "Number", "Title", "Deleted by", "Deleted at", "" ].each do |heading| %>
+              <% [ "Type", "Number", "Title", "Deleted by", "Deleted at" ].each do |heading| %>
                 <th class="px-6 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider"><%= heading %></th>
               <% end %>
+              <th class="px-6 py-3"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-stone-100 dark:divide-stone-800">
@@ -28,14 +29,19 @@
               <tr data-trash-row="<%= item.id %>" class="hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600 dark:text-stone-400"><%= item.item_type %></td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-stone-500 dark:text-stone-400"><%= item.number %></td>
-                <td class="px-6 py-4 text-sm font-medium text-stone-900 dark:text-white"><%= item.title %></td>
+                <td class="px-6 py-4 text-sm font-medium text-stone-900 dark:text-white">
+                  <%= item.title %>
+                  <% if item.feature_id %>
+                    <span class="block text-xs font-normal text-stone-500 dark:text-stone-400">in F<%= item.feature_id %></span>
+                  <% end %>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600 dark:text-stone-400"><%= item.trashed_by&.email_address || "Unknown" %></td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-500 dark:text-stone-400"><%= format_datetime(item.created_at) %></td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <% if can?(:restore, item) %>
                     <div class="flex items-center justify-end gap-2">
                       <%= button_to "Restore", restore_project_trashed_item_path(@project, item), class: "btn btn-sm btn-primary" %>
-                      <%= link_to "Download snapshot", download_project_trashed_item_path(@project, item), class: "btn btn-sm btn-ghost" %>
+                      <%= link_to "Download snapshot", download_project_trashed_item_path(@project, item), class: "btn btn-sm btn-ghost", "hx-boost" => "false" %>
                       <%= button_to "Delete forever", project_trashed_item_path(@project, item),
                             method: :delete,
                             "x-data": "{}",
