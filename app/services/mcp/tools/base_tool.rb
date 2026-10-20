@@ -53,7 +53,7 @@ module Mcp
         MCP::Tool::Response.new([ {
           type: "text",
           text: error_data.to_json
-        } ])
+        } ], error: true)
       end
 
       def self.safe_user_email(user)
