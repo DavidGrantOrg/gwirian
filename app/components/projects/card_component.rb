@@ -15,7 +15,7 @@ module Projects
     end
 
     def scenarios_count
-      project.scenarios.size
+      execution_stats[:total]
     end
 
     def members_count
@@ -25,14 +25,15 @@ module Projects
     def execution_stats
       @execution_stats ||= begin
         statuses = project.scenarios.includes(:scenario_executions).map(&:current_status)
-        total = statuses.size
-        return { passed: 0, failed: 0, pending: 0, total: 0 } if total.zero?
+        backlog = statuses.count("backlog")
 
+        # total counts the scenarios out of the backlog.
         {
           passed: statuses.count("passed"),
           failed: statuses.count("failed"),
           pending: statuses.count("pending"),
-          total: total
+          backlog: backlog,
+          total: statuses.size - backlog
         }
       end
     end
@@ -52,13 +53,17 @@ module Projects
       100 - passed_percentage - failed_percentage
     end
 
+    def tested_count
+      execution_stats[:passed] + execution_stats[:failed]
+    end
+
+    # Rendered only when has_executions?, so tested_count is never zero here.
     def success_rate
-      return 0 if execution_stats[:total].zero?
-      passed_percentage
+      (execution_stats[:passed].to_f / tested_count * 100).round
     end
 
     def has_executions?
-      execution_stats[:total] > 0
+      tested_count > 0
     end
 
     def last_activity

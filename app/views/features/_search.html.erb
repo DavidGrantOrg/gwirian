@@ -1,0 +1,8 @@
+<div class="mb-6">
+  <%= render Shared::SearchInputComponent.new(
+    url: project_features_path(@project, folder: folder&.id),
+    target_id: "features-container",
+    placeholder: "Search features by title, description, or tags...",
+    value: params[:q]
+  ) %>
+</div>

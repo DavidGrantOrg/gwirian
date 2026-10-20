@@ -1,0 +1,13 @@
+<nav aria-label="Breadcrumb" class="mb-2 text-sm text-stone-500 dark:text-white/50">
+  <ol class="flex flex-wrap items-center gap-x-1.5">
+    <% crumbs.each_with_index do |(label, path), index| %>
+      <li class="flex items-center gap-x-1.5 min-w-0 <%= "before:content-['›'] before:text-stone-400 dark:before:text-white/30" if index.positive? %>">
+        <% if path %>
+          <a href="<%= path %>" class="truncate hover:text-stone-800 dark:hover:text-white/80 hover:underline"><%= label %></a>
+        <% else %>
+          <span class="truncate text-stone-700 dark:text-white/70" aria-current="page"><%= label %></span>
+        <% end %>
+      </li>
+    <% end %>
+  </ol>
+</nav>

@@ -15,7 +15,7 @@ module Scenarios
     end
 
     def confirmation_message
-      "Are you sure you want to delete this scenario?"
+      "Move S#{@scenario.id} to the Trash?"
     end
 
     private

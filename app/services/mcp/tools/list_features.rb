@@ -42,7 +42,11 @@ module Mcp
             features = Feature.search_by_project(search, project_id, limit: 100)
           end
 
-          success_result(features.map { |f| f.as_json(only: [ :id, :title, :description, :created_at, :updated_at, :project_id ]) })
+          folders_by_id = Folder.in_tree_order(project.folders).index_by(&:id)
+          success_result(features.map do |f|
+            f.as_json(only: [ :id, :title, :description, :created_at, :updated_at, :project_id ])
+              .merge(feature_folder_fields(f, folders_by_id))
+          end)
         end
       end
     end

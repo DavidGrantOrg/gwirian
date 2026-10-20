@@ -77,6 +77,7 @@ module Mcp
             recent: recent_executions
           }
           result["team_members"] = team_members
+          result["folders"] = Folder.in_tree_order(project.folders).map { |folder| folder_json(folder) }
 
           success_result(result)
         end

@@ -1,13 +1,20 @@
 class FeaturesController < ApplicationController
   before_action :require_workspace
   before_action :set_project
-  before_action :set_feature, only: [ :show, :update, :destroy, :add_tag, :remove_tag, :start_execution, :select_scenarios, :execute_scenarios ]
+  before_action :set_feature, only: [ :show, :update, :destroy, :add_tag, :remove_tag, :move, :start_execution, :select_scenarios, :execute_scenarios ]
 
   def index
+    @folders = Folder.in_tree_order(@project.folders)
+    if params[:folder].present?
+      @folder = @folders.find { |folder| folder.id.to_s == params[:folder].to_s }
+      raise ActiveRecord::RecordNotFound, "Folder not found" unless @folder
+    end
+    @focus_heading = @folder.present? && flash[:new_folder] == @folder.id
+
     if params[:q].present?
-      @features = Feature.search_by_project(params[:q], @project.id).records.order(:title).includes(scenarios: :scenario_executions)
+      @features = Feature.search_by_project(params[:q], @project.id).order(:title).includes(scenarios: :scenario_executions)
     else
-      @features = @project.features.order(:title).includes(scenarios: :scenario_executions)
+      @features = @project.features.where(folder: @folder).order(:title).includes(scenarios: :scenario_executions)
     end
   end
 
@@ -59,13 +66,31 @@ class FeaturesController < ApplicationController
   def destroy
     authorize! :destroy, @feature
 
-    @feature.destroy
+    Trash.move!(@feature, by: current_user)
 
     if htmx_request?
-      @features = @project.features.order(:title)
-      render partial: "features/features", locals: { features: @features, project: @project, notice: "Feature deleted successfully" }
+      @features = @project.features.where(folder_id: @feature.folder_id).order(:title).includes(scenarios: :scenario_executions)
+      render partial: "features/features", locals: {
+        features: @features, project: @project, in_folders: @project.folders.exists?, notice: "Moved to Trash."
+      }
     else
-      redirect_to project_features_path(@project), notice: "Feature deleted successfully"
+      redirect_to project_features_path(@project), notice: "Moved to Trash."
+    end
+  end
+
+  # Every way of moving a feature (the header's Folder drop-down, a card's Move to…) calls
+  # this; an empty folder_id means Unfiled. htmx gets the header back, whose breadcrumb
+  # shows the new place; a card's menu discards it and removes the card.
+  def move
+    authorize! :update, @feature
+
+    saved = @feature.update(folder_id: params[:folder_id].presence)
+    if htmx_request?
+      @feature.restore_attributes unless saved
+      render Features::HeaderComponent.new(feature: @feature, project: @project), layout: false,
+        status: saved ? :ok : :unprocessable_entity
+    else
+      redirect_to project_feature_path(@project, @feature), alert: saved ? nil : @feature.errors.full_messages.to_sentence
     end
   end
 
@@ -110,13 +135,13 @@ class FeaturesController < ApplicationController
     authorize! :execute, @feature
 
     if request.get?
-      @scenarios = @feature.scenarios.order(:position).includes(:scenario_executions)
+      @scenarios = runnable_scenarios.order(:position).includes(:scenario_executions)
     elsif request.post?
       selected_ids = params[:scenario_ids] || []
       scenario_ids = selected_ids.map(&:to_i)
 
       # Validate that all scenario IDs belong to this feature
-      valid_scenario_ids = @feature.scenarios.where(id: scenario_ids).pluck(:id)
+      valid_scenario_ids = runnable_scenarios.where(id: scenario_ids).pluck(:id)
       session[:selected_scenario_ids] = valid_scenario_ids
       redirect_to execute_scenarios_project_feature_path(@project, @feature)
     end
@@ -136,7 +161,7 @@ class FeaturesController < ApplicationController
 
       # Validate that all scenario IDs belong to this feature
       scenario_ids = executions_data.keys.map(&:to_i)
-      valid_scenario_ids = @feature.scenarios.where(id: scenario_ids).pluck(:id).map(&:to_s)
+      valid_scenario_ids = runnable_scenarios.where(id: scenario_ids).pluck(:id).map(&:to_s)
 
       executions_data.each do |scenario_id, execution_data|
         # Skip if scenario doesn't belong to this feature
@@ -177,7 +202,12 @@ class FeaturesController < ApplicationController
   end
 
   def feature_params
-    params.require(:feature).permit(:title, :description, :tag_list)
+    params.require(:feature).permit(:title, :description, :background, :tag_list)
+  end
+
+  # A backlog scenario is not built yet, so a manual run neither offers nor records it.
+  def runnable_scenarios
+    @feature.scenarios.where(backlog: false)
   end
 
   def execution_params

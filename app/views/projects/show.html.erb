@@ -32,25 +32,29 @@
     <%= render Dashboard::StatsComponent.new(project: @project) %>
   </div>
 
-  <%# Main Grid %>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 animate-in-up" style="--i: 2">
-    <%# Failing Tests %>
-    <%= render Dashboard::FailingTestsComponent.new(project: @project) %>
-    
+  <%# Main Grid; before any run, the coverage list takes the full width %>
+  <div class="grid grid-cols-1 <%= "lg:grid-cols-2" if @project.runs_recorded? %> gap-6 mb-10 animate-in-up" style="--i: 2">
+    <% if @project.runs_recorded? %>
+      <%= render Dashboard::FailingTestsComponent.new(project: @project) %>
+    <% end %>
+
     <%# Feature Coverage %>
     <%= render Dashboard::FeatureCoverageComponent.new(project: @project) %>
   </div>
 
-  <%# Execution Trends (Full Width) %>
-  <div class="mb-10 animate-in-up" style="--i: 3">
-    <%= render Dashboard::ExecutionTrendsComponent.new(project: @project) %>
-  </div>
+  <% if @project.runs_recorded? %>
+    <%# Execution Trends (Full Width) %>
+    <div class="mb-10 animate-in-up" style="--i: 3">
+      <%= render Dashboard::ExecutionTrendsComponent.new(project: @project) %>
+    </div>
+  <% end %>
 
   <%# Bottom Row %>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-2 animate-in-up" style="--i: 4">
-    <%# Recent Executions %>
-    <%= render Dashboard::RecentExecutionsComponent.new(project: @project) %>
-    
+    <% if @project.runs_recorded? %>
+      <%= render Dashboard::RecentExecutionsComponent.new(project: @project) %>
+    <% end %>
+
     <%# Team Members %>
     <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden">
       <div class="px-5 py-4 border-b border-stone-200 dark:border-stone-800">

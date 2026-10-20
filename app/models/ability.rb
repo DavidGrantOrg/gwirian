@@ -33,10 +33,23 @@ class Ability
 
     initialize_project_ability(user)
     initialize_feature_ability(user)
+    initialize_folder_ability(user)
     initialize_scenario_ability(user)
     initialize_scenario_execution_ability(user)
     initialize_step_ability(user)
+    initialize_trashed_item_ability(user)
     initialize_workspace_ability(user)
+  end
+
+  # Whoever may delete a feature may bring it back, or delete it for good.
+  def initialize_trashed_item_ability(user)
+    can :read, TrashedItem do |item|
+      item.project.member?(user)
+    end
+
+    can [ :restore, :destroy, :download ], TrashedItem do |item|
+      item.project.editor?(user) || item.project.admin?(user)
+    end
   end
 
   def initialize_project_ability(user)
@@ -72,6 +85,16 @@ class Ability
 
     can :execute, Feature do |feature|
       feature.project.editor?(user) || feature.project.admin?(user)
+    end
+  end
+
+  def initialize_folder_ability(user)
+    can :read, Folder do |folder|
+      folder.project.member?(user)
+    end
+
+    can [ :create, :update, :destroy ], Folder do |folder|
+      folder.project.editor?(user) || folder.project.admin?(user)
     end
   end
 

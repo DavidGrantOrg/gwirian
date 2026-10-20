@@ -2,7 +2,12 @@
 
 module Dashboard
   class FeatureCoverageComponent < ApplicationComponent
-    FeatureStats = Struct.new(:feature, :passed, :failed, :pending, :total, keyword_init: true) do
+    # total counts the scenarios out of the backlog; backlog counts the rest.
+    FeatureStats = Struct.new(:feature, :passed, :failed, :pending, :backlog, :total, keyword_init: true) do
+      def all_backlog?
+        total.zero? && backlog.positive?
+      end
+
       def pass_percentage
         return 0 if total.zero?
         (passed.to_f / total * 100).round
@@ -39,19 +44,36 @@ module Dashboard
       @features_with_stats ||= project.features.includes(scenarios: :scenario_executions).map do |feature|
         scenarios = feature.scenarios
         statuses = scenarios.map(&:current_status)
+        backlog = statuses.count("backlog")
 
         FeatureStats.new(
           feature: feature,
           passed: statuses.count("passed"),
           failed: statuses.count("failed"),
           pending: statuses.count("pending"),
-          total: statuses.size
+          backlog: backlog,
+          total: statuses.size - backlog
         )
       end.sort_by { |fs| [ -fs.failed, -fs.pending, fs.feature.title ] }
     end
 
+    Group = Struct.new(:label, :features, keyword_init: true)
+
+    # Features with no folder come first, under no heading, then each folder's in tree order.
+    def groups
+      by_folder = features_with_stats.group_by { |fs| fs.feature.folder_id }
+      filed = Folder.in_tree_order(project.folders).filter_map do |folder|
+        Group.new(label: folder.path_label, features: by_folder[folder.id]) if by_folder.key?(folder.id)
+      end
+      [ Group.new(label: nil, features: by_folder.fetch(nil, [])), *filed ].reject { |group| group.features.empty? }
+    end
+
     def has_features?
       features_with_stats.any?
+    end
+
+    def runs_recorded?
+      project.runs_recorded?
     end
 
     def feature_link(feature)

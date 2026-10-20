@@ -32,6 +32,16 @@ module ApplicationHelper
     end
   end
 
+  # Draws a step field one block per line, with nothing between the blocks: the field
+  # saves its innerText, so any whitespace there would join the saved steps.
+  # Table rows get a fixed-width font; application.js's markTableRows keeps that while typing.
+  def step_lines(text)
+    lines = text.to_s.strip.gsub(/\r\n?/, "\n").split("\n")
+    safe_join(lines.map do |line|
+      tag.div(line.presence || tag.br, class: ("font-mono" if line.lstrip.start_with?("|")))
+    end)
+  end
+
   # Format datetime with 24-hour time
   # Examples:
   #   format_datetime(time) => "Dec 22, 2025, 16:56"

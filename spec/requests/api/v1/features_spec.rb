@@ -62,6 +62,7 @@ RSpec.describe "Api::V1::Features", type: :request do
         expect(feature).to have_key("id")
         expect(feature).to have_key("title")
         expect(feature).to have_key("description")
+        expect(feature).to have_key("background")
         expect(feature).to have_key("created_at")
         expect(feature).to have_key("updated_at")
         expect(feature).to have_key("project_id")
@@ -201,6 +202,15 @@ RSpec.describe "Api::V1::Features", type: :request do
           expect(feature.tag_list).to contain_exactly("tag1", "tag2")
         end
 
+        it "stores a background that show then returns" do
+          params = { feature: { title: "New Feature", background: "the store is open\nthe shelf is empty" } }
+          post "/api/v1/projects/#{project.id}/features", params: params, headers: api_headers(workspace_member.api_token)
+          expect(response).to have_http_status(:created)
+
+          get "/api/v1/projects/#{project.id}/features/#{json_response["id"]}", headers: api_headers(workspace_member.api_token)
+          expect(json_response["background"]).to eq("the store is open\nthe shelf is empty")
+        end
+
         context "with validation errors" do
           it "fails with missing title" do
             invalid_params = { feature: { description: "Description only" } }
@@ -290,6 +300,13 @@ RSpec.describe "Api::V1::Features", type: :request do
           expect(json_response["description"]).to eq("Updated Description")
         end
 
+        it "clears the background when given an empty one" do
+          feature.update!(background: "the store is open")
+          patch "/api/v1/projects/#{project.id}/features/#{feature.id}", params: { feature: { background: "" } }, headers: api_headers(workspace_member.api_token)
+          expect(response).to have_http_status(:ok)
+          expect(json_response["background"]).to eq("")
+        end
+
         it "handles tag_list parameter" do
           patch "/api/v1/projects/#{project.id}/features/#{feature.id}", params: update_params, headers: api_headers(workspace_member.api_token)
           expect(response).to have_http_status(:ok)
@@ -329,6 +346,53 @@ RSpec.describe "Api::V1::Features", type: :request do
     end
   end
 
+  describe "a feature's folder" do
+    let!(:editor_member) { create(:project_member, project: project, email: user.email_address, role: "editor") }
+    let(:headers) { api_headers(workspace_member.api_token) }
+    let(:folder) { create(:folder, project: project, name: "Ordering") }
+    let(:feature) { create(:feature, project: project) }
+
+    it "is empty for an unfiled feature" do
+      feature
+      get "/api/v1/projects/#{project.id}/features", headers: headers
+      expect(json_response.first).to include("folder_id" => nil)
+    end
+
+    it "is set when a feature is created in it" do
+      post "/api/v1/projects/#{project.id}/features", params: { feature: { title: "Reorder", folder_id: folder.id } }, headers: headers
+      expect(response).to have_http_status(:created)
+      get "/api/v1/projects/#{project.id}/features/#{json_response["id"]}", headers: headers
+      expect(json_response["folder_id"]).to eq(folder.id)
+    end
+
+    it "moves to Unfiled when given as null" do
+      feature.update!(folder: folder)
+      patch "/api/v1/projects/#{project.id}/features/#{feature.id}", params: { feature: { folder_id: nil } }, headers: headers, as: :json
+      expect(response).to have_http_status(:ok)
+      get "/api/v1/projects/#{project.id}/features/#{feature.id}", headers: headers
+      expect(json_response["folder_id"]).to be_nil
+    end
+
+    it "stays put when an update leaves it out" do
+      feature.update!(folder: folder)
+      patch "/api/v1/projects/#{project.id}/features/#{feature.id}", params: { feature: { title: "Renamed" } }, headers: headers, as: :json
+      expect(json_response["folder_id"]).to eq(folder.id)
+    end
+
+    it "refuses a folder from another project" do
+      other = create(:folder, project: create(:project, workspace: workspace))
+      patch "/api/v1/projects/#{project.id}/features/#{feature.id}", params: { feature: { folder_id: other.id } }, headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response["errors"]).to eq([ "Folder must be in the same project" ])
+    end
+
+    it "refuses a folder that does not exist" do
+      patch "/api/v1/projects/#{project.id}/features/#{feature.id}", params: { feature: { folder_id: 999_999 } }, headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response["errors"]).to eq([ "Folder must exist" ])
+    end
+  end
+
   describe "DELETE /api/v1/projects/:project_id/features/:id" do
     let!(:feature) { create(:feature, project: project) }
 
@@ -361,16 +425,34 @@ RSpec.describe "Api::V1::Features", type: :request do
           expect(response).to have_http_status(:ok)
         end
 
-        it "returns success message" do
+        it "returns today's success message with the trash item and the Trash page" do
           delete "/api/v1/projects/#{project.id}/features/#{feature.id}", headers: api_headers(workspace_member.api_token)
           expect(response).to have_http_status(:ok)
-          expect(json_response["message"]).to eq("Feature deleted successfully")
+          expect(json_response).to eq(
+            "message" => "Feature deleted successfully",
+            "trashed_item_id" => TrashedItem.find_by!(item_type: "Feature", item_id: feature.id).id,
+            "trash_url" => "http://www.example.com/#{workspace.slug}/projects/#{project.id}/trash"
+          )
         end
 
-        it "feature is actually deleted from database" do
+        it "answers a refused delete with its errors, as before, and keeps the feature" do
+          allow_any_instance_of(Feature).to receive(:destroy!) do |record|
+            record.errors.add(:base, "Feature is locked")
+            raise ActiveRecord::RecordNotDestroyed.new("Failed to destroy", record)
+          end
+
+          delete "/api/v1/projects/#{project.id}/features/#{feature.id}", headers: api_headers(workspace_member.api_token)
+
+          expect(response).to have_http_status(:unprocessable_content)
+          expect(json_response).to eq("errors" => [ "Feature is locked" ])
+          expect(Feature.exists?(feature.id)).to be(true)
+        end
+
+        it "moves the feature to the Trash" do
           feature_id = feature.id
           delete "/api/v1/projects/#{project.id}/features/#{feature.id}", headers: api_headers(workspace_member.api_token)
           expect(Feature.find_by(id: feature_id)).to be_nil
+          expect(project.trashed_items.map(&:number)).to eq([ "F#{feature_id}" ])
         end
 
         context "when feature does not exist" do

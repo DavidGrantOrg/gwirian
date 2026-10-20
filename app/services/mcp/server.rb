@@ -8,10 +8,13 @@ module Mcp
       "#{Gwirian.app_name} MCP Server"
     end
 
-    def self.instance
-      @instance ||= ::MCP::Server.new(
+    # A server per request: MCP::Server reads server_context when a tool runs, so a shared
+    # instance lets one request's user leak into another request handled at the same time.
+    def self.build(server_context:)
+      ::MCP::Server.new(
         name: server_name,
         version: SERVER_VERSION,
+        server_context: server_context,
         tools: [
           Mcp::Tools::ListProjects,
           Mcp::Tools::GetProject,
@@ -21,11 +24,17 @@ module Mcp
           Mcp::Tools::CreateFeature,
           Mcp::Tools::UpdateFeature,
           Mcp::Tools::DeleteFeature,
+          Mcp::Tools::ListFolders,
+          Mcp::Tools::CreateFolder,
+          Mcp::Tools::UpdateFolder,
+          Mcp::Tools::DeleteFolder,
           Mcp::Tools::ListScenarios,
           Mcp::Tools::GetScenario,
           Mcp::Tools::CreateScenario,
           Mcp::Tools::UpdateScenario,
           Mcp::Tools::DeleteScenario,
+          Mcp::Tools::ListTrashedItems,
+          Mcp::Tools::RestoreTrashedItem,
           Mcp::Tools::ListScenarioExecutions,
           Mcp::Tools::GetScenarioExecution,
           Mcp::Tools::CreateScenarioExecution,

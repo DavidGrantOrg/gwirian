@@ -31,6 +31,7 @@ class Api::V1::ApiController < ActionController::Base
     case model_name
     when "Project" then "Project not found"
     when "Feature" then "Feature not found"
+    when "Folder" then "Folder not found"
     when "Scenario" then "Scenario not found"
     when "ScenarioExecution" then "Scenario execution not found"
     else exception.message
@@ -39,5 +40,16 @@ class Api::V1::ApiController < ActionController::Base
 
   def set_project
     @project = accessible_projects.find(params[:project_id])
+  end
+
+  def move_to_trash(record, message)
+    item = Trash.move!(record, by: current_user)
+    render json: {
+      message: message,
+      trashed_item_id: item.id,
+      trash_url: project_trashed_items_url(@project, script_name: "/#{@project.workspace.slug}")
+    }, status: :ok
+  rescue ActiveRecord::RecordNotDestroyed => e
+    render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
   end
 end

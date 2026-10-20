@@ -1,18 +1,24 @@
-<div class="relative group animate-in-up" style="--i: <%= stagger_index %>">
+<div class="relative group animate-in-up" style="--i: <%= stagger_index %>" data-feature-card>
   <% if helpers.can?(:destroy, feature) %>
-    <%= render Features::DropdownMenuComponent.new(feature: feature, project: project) %>
+    <%= render Features::DropdownMenuComponent.new(feature: feature, project: project, folders: folders) %>
   <% end %>
   <%= link_to project_feature_path(project, feature), class: "block" do %>
-    <div class="p-4 rounded-lg transition-all duration-200 hover:bg-stone-50 dark:hover:bg-white/5 border border-stone-200 dark:border-white/10 hover:border-stone-300 dark:hover:border-white/20 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]">
-      <h3 class="text-sm font-semibold mb-1 text-stone-800 dark:text-white/90 group-hover:text-stone-900 dark:group-hover:text-white transition-colors">
-        <%= feature.title %>
-      </h3>
+    <div class="p-4 rounded-lg transition-all duration-200 hover:bg-stone-50 dark:hover:bg-white/5 border border-stone-200 dark:border-white/10 hover:border-stone-300 dark:hover:border-white/20 hover:shadow-sm active:scale-[0.99]">
+      <% if folder_path %>
+        <p class="text-xs mb-1 text-stone-500 dark:text-white/55" aria-label="Folder"><%= folder_path %></p>
+      <% end %>
+      <div class="flex items-baseline gap-2 mb-1">
+        <span class="flex-shrink-0 text-sm font-medium font-mono text-stone-600 dark:text-white/70">F<%= feature.id %></span>
+        <h3 class="text-sm font-semibold text-stone-800 dark:text-white/90 group-hover:text-stone-900 dark:group-hover:text-white transition-colors">
+          <%= feature.title %>
+        </h3>
+      </div>
       <% if feature.description.present? %>
         <p class="text-sm line-clamp-2 mb-3 text-stone-500 dark:text-white/60">
           <%= feature.description %>
         </p>
       <% else %>
-        <p class="text-sm italic mb-3 text-stone-400 dark:text-white/30">
+        <p class="text-sm italic mb-3 text-stone-500 dark:text-white/45">
           No description
         </p>
       <% end %>
@@ -22,6 +28,7 @@
       <%# Execution statistics %>
       <% if has_scenarios? %>
         <div class="mt-4 pt-3 border-t border-stone-100 dark:border-white/5">
+          <% if scenarios_count > 0 %>
           <div class="text-xs text-stone-600 dark:text-white/70 mb-2">
             <%= scenarios_count %> <%= "scenario".pluralize(scenarios_count) %>
           </div>
@@ -38,6 +45,7 @@
               <div class="h-full bg-stone-300 dark:bg-white/30" style="width: <%= pending_percentage %>%"></div>
             <% end %>
           </div>
+          <% end %>
 
           <%# Legend %>
           <div class="flex items-center gap-4 text-xs">
@@ -65,11 +73,19 @@
                 <%= execution_stats[:pending] %> Pending
               </span>
             <% end %>
+            <% if execution_stats[:backlog] > 0 %>
+              <span class="flex items-center gap-1 status-inline-text-backlog">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="<%= Shared::StatusComponent::STATUS_STYLES["backlog"][:icon] %>" />
+                </svg>
+                <%= execution_stats[:backlog] %> <%= t("status.backlog") %>
+              </span>
+            <% end %>
           </div>
         </div>
       <% else %>
         <div class="mt-4 pt-3 border-t border-stone-100 dark:border-white/5">
-          <p class="text-xs text-stone-400 dark:text-white/30 italic">No scenarios yet</p>
+          <p class="text-xs text-stone-500 dark:text-white/45 italic">No scenarios yet</p>
         </div>
       <% end %>
     </div>

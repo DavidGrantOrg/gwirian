@@ -8,6 +8,7 @@ Gwirian empowers development teams to manage their BDD features with ease. Creat
 
 - [What Gwirian Does](#what-gwirian-does)
 - [Key Features](#key-features)
+- [Folders](#folders)
 - [Architecture Overview](#architecture-overview)
 - [Technical Stack](#technical-stack)
 - [Requirements](#requirements)
@@ -49,7 +50,11 @@ Experience a lightning-fast interface built with the latest web technologies. Na
 - **Workspaces**: Organize teams and projects into separate workspaces
 - **Projects**: Group related features within a workspace
 - **Features**: Define BDD features with descriptions and backgrounds
+- **Folders**: Optionally file a project's features in folders and sub-folders
 - **Scenarios**: Create scenarios with Given/When/Then structure
+- **Numbers**: Each feature and scenario shows its id, as F8 and S9, the same id the REST API and MCP use
+- **Backlog**: Mark a scenario as written but not built yet; it shows a Backlog badge and is left out of every count and pass rate (see [docs/docker-deployment.md](docs/docker-deployment.md#new-scenarios-in-the-backlog))
+- **Trash**: A deleted feature or scenario goes to its project's Trash, and Restore brings it back under its number with its scenarios, steps, tags and runs
 - **Steps**: Define detailed steps for each scenario
 - **Executions**: Track scenario execution status and history
 - **Tags**: Organize features and scenarios with flexible tagging
@@ -58,6 +63,31 @@ Experience a lightning-fast interface built with the latest web technologies. Na
 - **Keyboard-first navigation**: G-nav (G + letter) and shortcuts overlay (?); prev/next feature (G P / G N)
 - **API Access**: Workspace-scoped API tokens for programmatic access
 - **MCP Integration**: Model Context Protocol server for AI assistant integration
+
+## Folders
+
+Folders are optional: a project without any looks and behaves as it always has.
+
+- **Features page**: **New folder** creates a folder inside the one you are looking at. Once a project has a folder, the page shows the folder tree on the left, with the project as its root, and the open folder's sub-folders and features on the right. `?folder=<id>` in the URL holds the open folder. Search still covers the whole project, and each result shows its folder.
+- **A folder**: its name in the heading is edited in place. **Move to…** puts it inside another folder or back at the top, never inside itself. **Delete folder** keeps its features and sub-folders, which move up into its parent.
+- **A feature**: the **Folder** drop-down in its header, or **Move to…** in its card's menu, moves it; Unfiled means no folder. Its page shows a breadcrumb of its folders.
+- **REST API**: `/api/v1/projects/:project_id/folders` lists, shows, creates, updates and deletes folders; `parent_id: null` is the top of the project. Features carry `folder_id`, where `null` is Unfiled.
+- **MCP**: `list_folders`, `create_folder`, `update_folder` and `delete_folder`, and `folder_id` on the feature tools (see [docs/mcp.md](docs/mcp.md)).
+- **BDD export**: a foldered feature's file goes in its folder's directories (`ordering/suggested-orders/reorder.feature`); unfiled features stay at the top.
+
+Folders are identified by id everywhere, so renaming or moving one changes nothing for a caller.
+
+## Trash
+
+Deleting a feature or scenario, from the page, the REST API or MCP, moves it to the project's Trash rather than destroying it.
+
+- **Trash page**: **Trash** in the project navigation lists deleted items newest first, with who deleted each and when; an item's title opens it as Gherkin, a feature with all its scenarios. **Restore** brings an item back under its old number: a feature with its scenarios in order, their steps, its tags and every run; a scenario at its old place among its feature's scenarios. **Download snapshot** saves the item's rows as JSON. **Delete forever** removes it for good, a feature with the scenarios of it that were trashed on their own.
+- **Who may**: anyone in the project sees the Trash; an editor or administrator restores, downloads and deletes forever.
+- **Refusals**: a scenario whose feature is in the Trash too waits until the feature is restored; a feature whose folder has gone comes back unfiled.
+- **REST API**: the feature and scenario DELETE responses add `trashed_item_id` and `trash_url`.
+- **MCP**: `delete_feature` and `delete_scenario` return `trashed_item_id`; `list_trashed_items` and `restore_trashed_item` (see [docs/mcp.md](docs/mcp.md#recovering-a-delete)).
+
+Nothing in the Trash expires. Deleting a project, workspace, folder, step or execution is not undone by the Trash. In SaaS mode a restore does not check the plan's feature and scenario limits.
 
 ## Architecture Overview
 
@@ -70,6 +100,7 @@ Workspace
   ├── Workspace Members (users with roles)
   └── Projects
       ├── Project Members (email-based access)
+      ├── Folders (optional; each may hold sub-folders and features)
       └── Features
           ├── Tags
           └── Scenarios
@@ -82,6 +113,7 @@ Workspace
 - **Magic Links**: Passwordless authentication via email links (6-character code)
 - **Sessions**: Database-backed session management with expiration
 - **API Tokens**: Workspace-scoped tokens for programmatic access
+- **Invite-only sign-up**: Set `SIGNUP=invite_only` so only invited addresses can get a code (see [docs/docker-deployment.md](docs/docker-deployment.md#invite-only-sign-up))
 
 ### Authorization
 
@@ -214,6 +246,13 @@ This task will:
 3. Import all features and scenario executions into the indices
 
 > **Note**: Make sure Elasticsearch is running before executing this command (`docker-compose up -d`).
+
+### Running without Elasticsearch
+
+Set `SEARCH_BACKEND=database` to search with a database query instead of Elasticsearch: saves no longer index, and Elasticsearch need not be running.
+Search then matches every word as a case-insensitive substring of a title, description, tag or scenario step, without stemming, typo tolerance or ranking.
+Run `bin/rails elasticsearch:reindex` when switching back to Elasticsearch.
+See [docs/docker-deployment.md](docs/docker-deployment.md#search-without-elasticsearch).
 
 ## Testing
 

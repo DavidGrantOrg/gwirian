@@ -33,7 +33,7 @@ module Mcp
 
           scenarios = feature.scenarios.order(:position)
 
-          success_result(scenarios.map { |s| s.as_json(only: [ :id, :title, :position, :created_at, :updated_at, :feature_id ]) })
+          success_result(scenarios.map { |s| s.as_json(only: [ :id, :title, :position, :backlog, :created_at, :updated_at, :feature_id ]) })
         end
       end
     end

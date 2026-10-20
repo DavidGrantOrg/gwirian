@@ -1,8 +1,14 @@
 <!-- Feature Header -->
 <div class="mb-6" data-feature-header>
+  <% if folders.any? %>
+    <%= render Folders::BreadcrumbComponent.new(project: project, folder: folder, current: feature.title) %>
+  <% end %>
   <div class="flex items-start justify-between gap-4 mb-2">
-    <div class="flex-1">
-      <%= render Features::TitleComponent.new(feature: feature, project: project) %>
+    <div class="flex-1 flex items-baseline gap-3">
+      <span class="flex-shrink-0 text-2xl font-medium font-mono text-stone-500 dark:text-white/60">F<%= feature.id %></span>
+      <div class="flex-1 min-w-0">
+        <%= render Features::TitleComponent.new(feature: feature, project: project) %>
+      </div>
     </div>
     <% if can_execute? %>
       <a
@@ -20,5 +26,7 @@
   <%= render Features::DescriptionComponent.new(feature: feature, project: project) %>
   <div class="mt-3">
     <%= render Features::TagListComponent.new(feature: feature, project: project) %>
+    <%= render Folders::FeatureFolderSelectComponent.new(feature: feature, project: project, folders: folders) %>
   </div>
+  <%= render Features::BackgroundComponent.new(feature: feature, project: project) %>
 </div>

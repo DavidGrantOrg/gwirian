@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_22_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_19_120000) do
   create_table "features", force: :cascade do |t|
     t.string "title"
     t.text "description"
@@ -18,7 +18,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_22_130000) do
     t.datetime "updated_at", null: false
     t.integer "project_id", null: false
     t.text "background"
+    t.integer "folder_id"
+    t.index ["folder_id"], name: "index_features_on_folder_id"
     t.index ["project_id"], name: "index_features_on_project_id"
+  end
+
+  create_table "folders", force: :cascade do |t|
+    t.integer "project_id", null: false
+    t.integer "parent_id"
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "project_id, COALESCE(parent_id, 0), lower(name)", name: "index_folders_on_project_parent_and_name", unique: true
+    t.index ["parent_id"], name: "index_folders_on_parent_id"
+    t.index ["project_id"], name: "index_folders_on_project_id"
   end
 
   create_table "login_histories", force: :cascade do |t|
@@ -87,6 +100,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_22_130000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "position"
+    t.boolean "backlog", default: false, null: false
     t.index ["feature_id", "position"], name: "index_scenarios_on_feature_id_and_position"
     t.index ["feature_id"], name: "index_scenarios_on_feature_id"
   end
@@ -143,6 +157,23 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_22_130000) do
     t.index ["name"], name: "index_tags_on_name", unique: true
   end
 
+  create_table "trashed_items", force: :cascade do |t|
+    t.integer "project_id", null: false
+    t.string "event", null: false
+    t.string "item_type", null: false
+    t.integer "item_id", null: false
+    t.string "title"
+    t.integer "feature_id"
+    t.json "payload", null: false
+    t.integer "trashed_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["feature_id"], name: "index_trashed_items_on_feature_id"
+    t.index ["item_type", "item_id"], name: "index_trashed_items_on_item_type_and_item_id", unique: true, where: "event = 'destroy'"
+    t.index ["project_id", "created_at"], name: "index_trashed_items_on_project_id_and_created_at"
+    t.index ["trashed_by_id"], name: "index_trashed_items_on_trashed_by_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email_address", null: false
     t.string "password_digest"
@@ -178,7 +209,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_22_130000) do
     t.index ["slug"], name: "index_workspaces_on_slug", unique: true
   end
 
+  add_foreign_key "features", "folders"
   add_foreign_key "features", "projects"
+  add_foreign_key "folders", "folders", column: "parent_id"
+  add_foreign_key "folders", "projects"
   add_foreign_key "login_histories", "users"
   add_foreign_key "magic_links", "users"
   add_foreign_key "project_members", "projects"
@@ -189,6 +223,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_22_130000) do
   add_foreign_key "sessions", "users"
   add_foreign_key "steps", "scenarios"
   add_foreign_key "taggings", "tags"
+  add_foreign_key "trashed_items", "projects", on_delete: :cascade
+  add_foreign_key "trashed_items", "users", column: "trashed_by_id", on_delete: :nullify
   add_foreign_key "workspace_members", "users"
   add_foreign_key "workspace_members", "workspaces"
 end

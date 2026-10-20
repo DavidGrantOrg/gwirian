@@ -9,8 +9,24 @@
   </div>
 
   <% if has_features? %>
+    <% groups.each do |group| %>
+    <% if group.label %>
+      <h4 class="px-5 pt-4 pb-1 text-xs font-medium uppercase tracking-wide text-stone-500 dark:text-white/55"><%= group.label %></h4>
+    <% end %>
     <div class="divide-y divide-stone-100 dark:divide-stone-800">
-      <% features_with_stats.each do |fs| %>
+      <% group.features.each do |fs| %>
+        <% unless runs_recorded? %>
+        <a href="<%= feature_link(fs.feature) %>" class="flex items-center justify-between gap-4 px-5 py-2 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
+          <span class="text-sm text-stone-900 dark:text-white/90 truncate"><%= fs.feature.title %></span>
+          <% if fs.all_backlog? %>
+            <%= render Shared::StatusComponent.new(status: "backlog", variant: :badge, size: :sm) %>
+          <% else %>
+          <span class="text-xs text-stone-500 dark:text-stone-400 flex-shrink-0">
+            <%= fs.total %> <%= t("dashboard.feature_coverage.scenarios") %>
+          </span>
+          <% end %>
+        </a>
+        <% else %>
         <a href="<%= feature_link(fs.feature) %>" class="block px-5 py-3 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
           <div class="flex items-center justify-between gap-4 mb-2">
             <div class="flex items-center gap-2 min-w-0">
@@ -19,9 +35,13 @@
                 <%= fs.feature.title %>
               </span>
             </div>
+            <% if fs.all_backlog? %>
+              <%= render Shared::StatusComponent.new(status: "backlog", variant: :badge, size: :sm) %>
+            <% else %>
             <span class="text-xs text-stone-500 dark:text-stone-400 flex-shrink-0">
               <%= fs.total %> <%= t("dashboard.feature_coverage.scenarios") %>
             </span>
+            <% end %>
           </div>
           
           <%# Stacked progress bar %>
@@ -58,19 +78,27 @@
                   <%= fs.pending %> <%= t("dashboard.feature_coverage.pending") %>
                 </span>
               <% end %>
+              <% if fs.backlog > 0 %>
+                <span class="flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                  <%= t("dashboard.feature_coverage.backlog", count: fs.backlog) %>
+                </span>
+              <% end %>
             </div>
-          <% else %>
-            <div class="text-xs text-stone-400 dark:text-stone-500 italic">
+          <% elsif fs.backlog.zero? %>
+            <div class="text-xs text-stone-500 dark:text-stone-500 italic">
               <%= t("dashboard.feature_coverage.no_scenarios") %>
             </div>
           <% end %>
         </a>
+        <% end %>
       <% end %>
     </div>
+    <% end %>
   <% else %>
     <div class="px-5 py-12 text-center">
       <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-stone-100 dark:bg-stone-800 mb-3">
-        <svg class="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-6 h-6 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
       </div>

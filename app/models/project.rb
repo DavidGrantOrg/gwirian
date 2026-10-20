@@ -2,12 +2,23 @@ class Project < ApplicationRecord
   belongs_to :workspace
   has_many :project_members, dependent: :destroy
   has_many :features, dependent: :destroy
+  # After features, so no feature still points at a folder; one DELETE, so parent links
+  # between the folders don't matter.
+  has_many :folders, dependent: :delete_all
+  has_many :trashed_items, dependent: :delete_all
   has_many :scenarios, through: :features
   has_many :scenario_executions, through: :scenarios
 
   validates :name, presence: true, length: { maximum: 80 }
   validates :description, length: { maximum: 1000 }
   validates :context, length: { maximum: 10_000 }, allow_blank: true
+
+  # Until a run is recorded, the dashboard has no pass rate to show.
+  def runs_recorded?
+    return @runs_recorded if defined?(@runs_recorded)
+
+    @runs_recorded = scenario_executions.exists?
+  end
 
   # Returns the user's role in the project, or nil if not a member
   # This method is optimized to make a single query
@@ -62,13 +73,17 @@ class Project < ApplicationRecord
   end
 
   # Returns an array of [ filename, content ] for building the BDD export ZIP.
-  # First entry is project_info.md, then one .feature file per feature (slug from title, duplicates suffixed with id).
+  # First entry is project_info.md, then one .feature file per feature (slug from title, duplicates suffixed with id),
+  # in its folder's directories, or at the top when it has no folder.
   def gherkin_export_entries
     entries = []
     entries << [ "project_info.md", gherkin_project_info_content ]
     features_list = features.includes(:scenarios, :taggings).order(:title).to_a
-    used_basenames = {}
+    directories = gherkin_export_directories
+    used_basenames_by_directory = Hash.new { |hash, directory| hash[directory] = {} }
     features_list.each do |feature|
+      directory = directories[feature.folder_id]
+      used_basenames = used_basenames_by_directory[directory]
       base = feature.title.present? ? feature.title.parameterize : "feature"
       base = "feature" if base.blank?
       basename = base.dup
@@ -79,13 +94,13 @@ class Project < ApplicationRecord
       else
         used_basenames[basename] = 1
       end
-      filename = "#{basename}.feature"
+      filename = "#{directory}#{basename}.feature"
       entries << [ filename, feature.to_gherkin ]
     end
     entries
   end
 
-  # Search within this project for features and scenarios matching the query (Elasticsearch).
+  # Search within this project for features and scenarios matching the query.
   # @param [String] query search string
   # @param [Integer] limit max results per type (default 20)
   # @return [Array<Hash>] array of hashes with type, id, title, and type-specific fields
@@ -93,9 +108,9 @@ class Project < ApplicationRecord
     results = []
     return results if query.blank?
 
-    features = Feature.search_by_project(query, id, limit: limit).records
+    features = Feature.search_by_project(query, id, limit: limit)
                      .includes(scenarios: :scenario_executions)
-    scenarios = Scenario.search_by_project(query, id, limit: limit).records
+    scenarios = Scenario.search_by_project(query, id, limit: limit)
                        .includes(:feature, :scenario_executions)
 
     features.each do |f|
@@ -120,6 +135,21 @@ class Project < ApplicationRecord
   end
 
   private
+
+  # Folder id => "its/directories/" in the export; nil (unfiled) => "". A folder whose
+  # name makes the same directory name as an earlier sibling's gets its id added.
+  def gherkin_export_directories
+    directories = { nil => "" }
+    taken_by_parent = Hash.new { |hash, parent_id| hash[parent_id] = Set.new }
+    Folder.in_tree_order(folders).each do |folder|
+      taken = taken_by_parent[folder.parent_id]
+      base = folder.name.parameterize.presence || "folder"
+      name = taken.include?(base) ? "#{base}-#{folder.id}" : base
+      taken << name
+      directories[folder.id] = "#{directories[folder.parent_id]}#{name}/"
+    end
+    directories
+  end
 
   def gherkin_project_header
     lines = []
@@ -155,6 +185,7 @@ class Project < ApplicationRecord
 
   def aggregate_status_from(statuses)
     return nil if statuses.empty?
+    return "backlog" if statuses.all?("backlog")
     return "failed" if statuses.include?("failed")
     return "pending" if statuses.include?("pending")
     "passed"

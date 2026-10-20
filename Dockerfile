@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=mirror.gcr.io/docker/dockerfile:1
 # check=error=true
 
 # This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
@@ -9,7 +9,9 @@
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
 ARG RUBY_VERSION=4.0.0
-FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
+# This image and the syntax line come from Google's copy of Docker Hub: Docker Hub limits
+# unauthenticated pulls per IP, and GitHub's shared runners hit that limit.
+FROM mirror.gcr.io/library/ruby:$RUBY_VERSION-slim AS base
 
 # Rails app lives here
 WORKDIR /rails

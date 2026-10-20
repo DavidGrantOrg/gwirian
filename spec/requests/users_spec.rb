@@ -124,6 +124,37 @@ RSpec.describe "Users", type: :request do
         expect(User.count).to eq(1)
       end
     end
+
+    context "when sign-up is invite-only" do
+      include ActiveJob::TestHelper
+
+      around do |example|
+        previous = ENV["SIGNUP"]
+        ENV["SIGNUP"] = "invite_only"
+        example.run
+      ensure
+        ENV["SIGNUP"] = previous
+      end
+
+      it "creates no account and sends no email for an unknown address, showing the usual code page" do
+        expect {
+          post "/users", params: valid_params
+        }.not_to change(User, :count)
+
+        expect(enqueued_jobs).to be_empty
+        expect(response).to redirect_to(session_magic_link_path)
+      end
+
+      it "sends a code to an address Gwirian already knows, such as an invited member" do
+        invited = create(:user, email_address: "newuser@example.com")
+
+        expect {
+          post "/users", params: valid_params
+        }.to change { invited.magic_links.count }.by(1)
+
+        expect(response).to redirect_to(session_magic_link_path)
+      end
+    end
   end
 
   describe "GET /users/:id/edit" do

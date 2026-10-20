@@ -21,9 +21,17 @@ module Mcp
               type: "string",
               description: "The description of the feature"
             },
+            background: {
+              type: "string",
+              description: "The Background: steps every scenario shares, one per line, each without its Given keyword"
+            },
             tag_list: {
               type: "string",
               description: "Comma-separated list of tags"
+            },
+            folder_id: {
+              type: [ "integer", "null" ],
+              description: "The ID of the folder to create it in (see list_folders); leave out or null for Unfiled"
             }
           },
           required: [ "project_id", "title" ]
@@ -37,7 +45,7 @@ module Mcp
         open_world_hint: false
       )
 
-      def self.call(project_id:, title:, description: nil, tag_list: nil, server_context:)
+      def self.call(project_id:, title:, description: nil, background: nil, tag_list: nil, folder_id: nil, server_context:)
         handle_errors do
           current_user = server_context[:current_user]
           project = current_user.projects.find_by(id: project_id)
@@ -46,7 +54,9 @@ module Mcp
           feature = project.features.new(
             title: title,
             description: description,
-            tag_list: tag_list
+            background: background,
+            tag_list: tag_list,
+            folder_id: folder_id
           )
 
           authorize!(current_user, :create, feature)
@@ -54,7 +64,7 @@ module Mcp
           if feature.save
             result = feature.as_json(only: [ :id, :title, :description, :created_at, :updated_at, :project_id ])
             result["tag_list"] = feature.tag_list
-            success_result(result)
+            success_result(result.merge(feature_folder_fields(feature)))
           else
             error_result("Validation failed: #{feature.errors.full_messages.join(', ')}", code: -32003)
           end

@@ -86,7 +86,7 @@ class ProjectsController < ApplicationController
 
     if params[:q].present?
       search_results = ScenarioExecution.search_by_project(params[:q], @project.id)
-      ids = search_results.records.map(&:id)
+      ids = search_results.map(&:id)
       if ids.any?
         executions = @project.scenario_executions
           .where(id: ids)
@@ -248,7 +248,7 @@ class ProjectsController < ApplicationController
   private
 
   def status_label_for(status)
-    { "passed" => "Passed", "failed" => "Failed", "pending" => "Pending" }.fetch(status, "Pending")
+    { "passed" => "Passed", "failed" => "Failed", "pending" => "Pending", "backlog" => I18n.t("status.backlog") }.fetch(status, "Pending")
   end
 
   def render_alert(message)

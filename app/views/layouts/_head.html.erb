@@ -20,6 +20,30 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
+    <%# Sets data-theme before the stylesheet loads, so a saved Light or Dark never flashes the other theme. %>
+    <script>
+      (() => {
+        const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        const stored = () => {
+          try { return localStorage.getItem("theme") || "system"; } catch { return "system"; }
+        };
+        const apply = () => {
+          const theme = stored();
+          const dark = theme === "dark" || (theme === "system" && darkQuery.matches);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+        };
+        window.gwirianTheme = {
+          get: stored,
+          set(theme) {
+            try { localStorage.setItem("theme", theme); } catch {}
+            apply();
+          }
+        };
+        darkQuery.addEventListener("change", apply);
+        apply();
+      })();
+    </script>
+
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app %>
     <%= javascript_importmap_tags %>

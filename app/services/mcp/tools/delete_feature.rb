@@ -3,7 +3,8 @@
 module Mcp
   module Tools
     class DeleteFeature < BaseTool
-      description "Delete a feature"
+      description "Move a feature, with its scenarios, steps and runs, to the project's Trash; " \
+        "restore_trashed_item with the trashed_item_id it returns brings it back"
 
       input_schema(
         {
@@ -11,7 +12,7 @@ module Mcp
           properties: {
             feature_id: {
               type: "integer",
-              description: "The ID of the feature to delete"
+              description: "The ID of the feature to move to the Trash"
             }
           },
           required: [ "feature_id" ]
@@ -28,14 +29,13 @@ module Mcp
       def self.call(feature_id:, server_context:)
         handle_errors do
           current_user = server_context[:current_user]
-          feature = Feature.find_by(id: feature_id)
+          feature = Feature.where(project: workspace_projects(server_context)).find(feature_id)
           authorize!(current_user, :destroy, feature)
 
-          if feature.destroy
-            success_result({ message: "Feature deleted successfully", id: feature_id })
-          else
-            error_result("Failed to delete feature: #{feature.errors.full_messages.join(', ')}", code: -32000)
-          end
+          item = Trash.move!(feature, by: current_user)
+          success_result({ message: "Feature deleted successfully", id: feature_id, trashed_item_id: item.id })
+        rescue ActiveRecord::RecordNotDestroyed => e
+          error_result("Failed to delete feature: #{e.record.errors.full_messages.join(', ')}", code: -32000)
         end
       end
     end
