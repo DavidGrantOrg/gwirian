@@ -2,12 +2,15 @@
 
 module Mcp
   class Server
-    SERVER_NAME = "Gwirian MCP Server"
     SERVER_VERSION = "1.0.0"
+
+    def self.server_name
+      "#{Gwirian.app_name} MCP Server"
+    end
 
     def self.instance
       @instance ||= ::MCP::Server.new(
-        name: SERVER_NAME,
+        name: server_name,
         version: SERVER_VERSION,
         tools: [
           Mcp::Tools::ListProjects,
