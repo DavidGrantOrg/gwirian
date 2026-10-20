@@ -36,5 +36,8 @@ module Gwirian
 
     config.signup = ActiveSupport::OrderedOptions.new
     config.signup.notify_email = ENV.fetch("SIGNUP_NOTIFY_EMAIL") { "" }
+
+    # A lambda, since app/ is not autoloadable while this file runs.
+    config.exceptions_app = ->(env) { PublicErrorPages.new(Rails.public_path).call(env) }
   end
 end
