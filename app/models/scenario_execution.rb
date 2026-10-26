@@ -14,7 +14,7 @@ class ScenarioExecution < ApplicationRecord
   validates :executed_at, presence: true
   validates :notes, length: { maximum: 5000 }, allow_blank: true
 
-  scope :latest_first, -> { order(executed_at: :desc) }
+  scope :latest_first, -> { order(executed_at: :desc, id: :desc) }
   scope :pending, -> { where(status: "pending") }
   scope :passed, -> { where(status: "passed") }
   scope :failed, -> { where(status: "failed") }
@@ -45,6 +45,17 @@ class ScenarioExecution < ApplicationRecord
       project_id: scenario&.feature&.project_id,
       tags: tag_list
     }
+  end
+
+  # The newest run of each scenario in the scenarios relation, read through the
+  # (scenario_id, executed_at) index one row per scenario, however many runs it has.
+  def self.latest_for(scenarios, at_or_before: nil)
+    latest = sanitize_sql_array([ <<~SQL.squish, at_or_before ].compact)
+      (SELECT e.id FROM scenario_executions e WHERE e.scenario_id = scenarios.id
+      #{"AND e.executed_at <= ?" if at_or_before}
+      ORDER BY e.executed_at DESC, e.id DESC LIMIT 1)
+    SQL
+    where(id: scenarios.select(Arel.sql(latest)))
   end
 
   def self.search_by_project(query, project_id, limit: 100)
