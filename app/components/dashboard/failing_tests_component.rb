@@ -14,12 +14,9 @@ module Dashboard
     attr_reader :project, :limit
 
     def failing_scenarios
-      @failing_scenarios ||= project.scenarios
-        .includes(:feature, scenario_executions: :user)
-        .select { |s| s.current_status == "failed" }
-        .sort_by { |s| s.latest_execution&.executed_at || Time.at(0) }
-        .reverse
-        .first(limit)
+      @failing_scenarios ||= ScenarioExecution.latest_for(project.scenarios.where(backlog: false))
+        .failed.latest_first.limit(limit).includes(scenario: :feature)
+        .map { |execution| execution.scenario.tap { |scenario| scenario.latest_execution = execution } }
     end
 
     def has_failures?
@@ -32,10 +29,6 @@ module Dashboard
 
     def last_execution_time(scenario)
       scenario.latest_execution&.executed_at
-    end
-
-    def executor_name(scenario)
-      scenario.latest_execution&.user&.email_address&.split("@")&.first || "Unknown"
     end
   end
 end

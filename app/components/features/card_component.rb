@@ -21,7 +21,7 @@ module Features
 
     def execution_stats
       @execution_stats ||= begin
-        statuses = feature.scenarios.includes(:scenario_executions).map(&:current_status)
+        statuses = Scenario.preload_latest_executions(feature.scenarios).map(&:current_status)
         backlog = statuses.count("backlog")
 
         {

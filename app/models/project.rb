@@ -108,10 +108,9 @@ class Project < ApplicationRecord
     results = []
     return results if query.blank?
 
-    features = Feature.search_by_project(query, id, limit: limit)
-                     .includes(scenarios: :scenario_executions)
-    scenarios = Scenario.search_by_project(query, id, limit: limit)
-                       .includes(:feature, :scenario_executions)
+    features = Feature.search_by_project(query, id, limit: limit).includes(:scenarios).to_a
+    scenarios = Scenario.search_by_project(query, id, limit: limit).includes(:feature).to_a
+    Scenario.preload_latest_executions(features.flat_map(&:scenarios) + scenarios)
 
     features.each do |f|
       statuses = f.scenarios.map(&:current_status)

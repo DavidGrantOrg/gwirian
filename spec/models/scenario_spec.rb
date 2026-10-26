@@ -152,4 +152,39 @@ RSpec.describe Scenario, type: :model do
       expect(scenario.reload.current_status).to eq("passed")
     end
   end
+
+  describe ".preload_latest_executions" do
+    let(:feature) { create(:feature) }
+    let!(:checkout) { create(:scenario, feature: feature) }
+    let!(:login) { create(:scenario, feature: feature) }
+    let!(:checkout_newest) { create(:scenario_execution, scenario: checkout, status: "failed", executed_at: 1.hour.ago) }
+
+    before { create(:scenario_execution, scenario: checkout, status: "passed", executed_at: 2.hours.ago) }
+
+    def queries_run
+      count = 0
+      counter = ->(*, payload) { count += 1 unless payload[:name] == "SCHEMA" }
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
+      count
+    end
+
+    it "gives each scenario its newest run, and none to a scenario never run" do
+      scenarios = Scenario.where(id: [ checkout, login ]).order(:id).to_a
+      Scenario.preload_latest_executions(scenarios)
+      expect(scenarios.map(&:latest_execution)).to eq([ checkout_newest, nil ])
+    end
+
+    it "answers each scenario's status without another query" do
+      scenarios = Scenario.where(id: [ checkout, login ]).order(:id).to_a
+      Scenario.preload_latest_executions(scenarios)
+      expect(queries_run { expect(scenarios.map(&:current_status)).to eq([ "failed", "pending" ]) }).to eq(0)
+    end
+
+    it "still reads a backlog scenario as backlog" do
+      checkout.update!(backlog: true)
+      scenarios = Scenario.where(id: checkout).to_a
+      Scenario.preload_latest_executions(scenarios)
+      expect(scenarios.first.current_status).to eq("backlog")
+    end
+  end
 end

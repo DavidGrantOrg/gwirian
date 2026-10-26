@@ -5,7 +5,7 @@ class ProjectsController < ApplicationController
   before_action :set_project, only: [ :show, :search, :history, :edit, :update, :destroy, :export_bdd, :add_member, :remove_member, :update_member ]
 
   def index
-    @projects = workspace_projects.order(:name).includes(scenarios: :scenario_executions)
+    @projects = workspace_projects.order(:name).includes(:scenarios)
   end
 
   def show
