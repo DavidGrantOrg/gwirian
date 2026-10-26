@@ -113,6 +113,40 @@ RSpec.describe "Project dashboard", type: :request do
     end
   end
 
+  context "with a scenario that failed, then passed" do
+    before do
+      create(:scenario_execution, scenario: scenarios.first, user: user, status: "failed", executed_at: 2.hours.ago)
+      create(:scenario_execution, scenario: scenarios.first, user: user, status: "passed", executed_at: 1.hour.ago)
+      create(:scenario_execution, scenario: scenarios.first, user: user, status: "failed", executed_at: 3.hours.ago)
+    end
+
+    it "rates it by its newest run, not the one recorded last" do
+      expect(main_text(dashboard)).to include("Pass Rate 100% of 1 tested scenario")
+    end
+
+    it "shows its feature as passed" do
+      expect(coverage_entries(dashboard).last).to eq("Reorder from history 1 scenarios 1 passed")
+    end
+
+    it "leaves it out of Failing Tests" do
+      expect(main_text(dashboard)).to include("All tests are passing!")
+    end
+  end
+
+  context "with a scenario that failed last week and passed this week" do
+    before do
+      scenarios.first.update!(created_at: 20.days.ago)
+      create(:scenario_execution, scenario: scenarios.first, user: user, status: "failed", executed_at: 10.days.ago)
+      create(:scenario_execution, scenario: scenarios.first, user: user, status: "passed", executed_at: 1.hour.ago)
+    end
+
+    it "rates last week by its latest run before the week ended" do
+      text = main_text(dashboard)
+      expect(text).to include("+100%")
+      expect(text).to include("was 0%")
+    end
+  end
+
   context "when the only run recorded is pending" do
     before { create(:scenario_execution, scenario: scenarios.first, user: user, status: "pending") }
 
