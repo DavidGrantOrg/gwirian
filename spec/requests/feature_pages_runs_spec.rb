@@ -42,4 +42,35 @@ RSpec.describe "Feature pages as runs are recorded", type: :request do
     record_runs
     expect(trash_one.call).to eq(before)
   end
+
+  it "shows each scenario's newest run on the feature page, not the one recorded last" do
+    create(:scenario_execution, scenario: scenarios.first, user: user, status: "failed", notes: "Card declined", executed_at: 1.hour.ago)
+    create(:scenario_execution, scenario: scenarios.first, user: user, status: "passed", notes: "Visa accepted", executed_at: 2.hours.ago)
+    get "#{base}/features/#{feature.id}"
+    row = Nokogiri::HTML(response.body).at_css("#scenario-wrapper-#{scenarios.first.id}").text.squish
+    expect(row).to include("Card declined")
+    expect(row).not_to include("Visa accepted")
+  end
+
+  it "reads no more runs on the feature page" do
+    record_runs
+    before = runs_read_by_get("#{base}/features/#{feature.id}")
+    record_runs
+    expect(runs_read_by_get("#{base}/features/#{feature.id}")).to eq(before)
+  end
+
+  it "reads no more runs picking scenarios for a manual run" do
+    record_runs
+    before = runs_read_by_get("#{base}/features/#{feature.id}/select_scenarios")
+    record_runs
+    expect(runs_read_by_get("#{base}/features/#{feature.id}/select_scenarios")).to eq(before)
+  end
+
+  it "reads no more runs on the manual run's form" do
+    post "#{base}/features/#{feature.id}/select_scenarios", params: { scenario_ids: scenarios.map(&:id) }
+    record_runs
+    before = runs_read_by_get("#{base}/features/#{feature.id}/execute_scenarios")
+    record_runs
+    expect(runs_read_by_get("#{base}/features/#{feature.id}/execute_scenarios")).to eq(before)
+  end
 end

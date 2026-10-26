@@ -19,6 +19,7 @@ class FeaturesController < ApplicationController
   end
 
   def show
+    Scenario.preload_latest_executions(@feature.scenarios)
     features_ordered = @project.features.order(:title).to_a
     index = features_ordered.index(@feature)
     if index && features_ordered.size > 1
@@ -135,7 +136,7 @@ class FeaturesController < ApplicationController
     authorize! :execute, @feature
 
     if request.get?
-      @scenarios = runnable_scenarios.order(:position).includes(:scenario_executions)
+      @scenarios = Scenario.preload_latest_executions(runnable_scenarios.order(:position).to_a)
     elsif request.post?
       selected_ids = params[:scenario_ids] || []
       scenario_ids = selected_ids.map(&:to_i)
@@ -152,7 +153,7 @@ class FeaturesController < ApplicationController
 
     if request.get?
       selected_ids = session[:selected_scenario_ids] || []
-      @scenarios = @feature.scenarios.where(id: selected_ids).order(:position).includes(:scenario_executions)
+      @scenarios = @feature.scenarios.where(id: selected_ids).order(:position)
       @scenarios = @scenarios.to_a.sort_by { |s| selected_ids.index(s.id) }
     elsif request.post?
       executions_data = execution_params
@@ -198,7 +199,7 @@ class FeaturesController < ApplicationController
   end
 
   def set_feature
-    @feature = @project.features.includes(scenarios: :scenario_executions).find(params[:id])
+    @feature = @project.features.includes(:scenarios).find(params[:id])
   end
 
   def feature_params
