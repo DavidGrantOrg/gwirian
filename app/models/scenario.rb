@@ -46,11 +46,7 @@ class Scenario < ApplicationRecord
   def latest_execution
     return @latest_execution if defined?(@latest_execution)
 
-    if scenario_executions.loaded?
-      scenario_executions.max_by(&:executed_at)
-    else
-      scenario_executions.latest_first.first
-    end
+    scenario_executions.latest_first.first
   end
 
   def current_status
