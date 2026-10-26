@@ -35,7 +35,17 @@ class Scenario < ApplicationRecord
     }
   end
 
+  attr_writer :latest_execution
+
+  # One query for every scenario's latest run, for a page that shows many scenarios' status.
+  def self.preload_latest_executions(scenarios)
+    latest = ScenarioExecution.latest_for(Scenario.where(id: scenarios)).index_by(&:scenario_id)
+    scenarios.each { |scenario| scenario.latest_execution = latest[scenario.id] }
+  end
+
   def latest_execution
+    return @latest_execution if defined?(@latest_execution)
+
     if scenario_executions.loaded?
       scenario_executions.max_by(&:executed_at)
     else
