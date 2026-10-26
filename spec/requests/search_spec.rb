@@ -46,6 +46,25 @@ RSpec.describe "Search with the database backend", type: :request, search_backen
     expect(json_response["results"].map { |r| [ r["type"], r["title"] ] }).to eq([ [ "feature", "Checkout" ], [ "scenario", "Pay by card" ] ])
   end
 
+  it "gives each command palette result its newest run's status" do
+    create(:scenario_execution, scenario: pay_by_card, user: user, status: "failed", executed_at: 1.hour.ago)
+    create(:scenario_execution, scenario: pay_by_card, user: user, status: "passed", executed_at: 2.hours.ago)
+    sign_in_as(user)
+    get "/#{workspace.slug}/projects/#{project.id}/search.json", params: { q: "basket" }
+
+    expect(json_response["results"].map { |r| [ r["type"], r["status"] ] }).to eq([ [ "feature", "failed" ], [ "scenario", "failed" ] ])
+  end
+
+  it "reads no more runs answering the command palette as more are recorded" do
+    sign_in_as(user)
+    search = lambda do
+      create_list(:scenario_execution, 3, scenario: pay_by_card, user: user, status: "passed")
+      records_instantiated("ScenarioExecution") { get "/#{workspace.slug}/projects/#{project.id}/search.json", params: { q: "basket" } }
+    end
+    before = search.call
+    expect(search.call).to eq(before)
+  end
+
   it "labels backlog in the command palette" do
     pay_by_card.update!(backlog: true)
     sign_in_as(user)
