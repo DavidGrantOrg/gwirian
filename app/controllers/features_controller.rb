@@ -12,9 +12,9 @@ class FeaturesController < ApplicationController
     @focus_heading = @folder.present? && flash[:new_folder] == @folder.id
 
     if params[:q].present?
-      @features = Feature.search_by_project(params[:q], @project.id).order(:title).includes(scenarios: :scenario_executions)
+      @features = Feature.search_by_project(params[:q], @project.id).order(:title).includes(:scenarios)
     else
-      @features = @project.features.where(folder: @folder).order(:title).includes(scenarios: :scenario_executions)
+      @features = @project.features.where(folder: @folder).order(:title).includes(:scenarios)
     end
   end
 
@@ -69,7 +69,7 @@ class FeaturesController < ApplicationController
     Trash.move!(@feature, by: current_user)
 
     if htmx_request?
-      @features = @project.features.where(folder_id: @feature.folder_id).order(:title).includes(scenarios: :scenario_executions)
+      @features = @project.features.where(folder_id: @feature.folder_id).order(:title).includes(:scenarios)
       render partial: "features/features", locals: {
         features: @features, project: @project, in_folders: @project.folders.exists?, notice: "Moved to Trash."
       }
