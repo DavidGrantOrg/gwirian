@@ -24,7 +24,7 @@ module Projects
 
     def execution_stats
       @execution_stats ||= begin
-        statuses = project.scenarios.includes(:scenario_executions).map(&:current_status)
+        statuses = Scenario.preload_latest_executions(project.scenarios).map(&:current_status)
         backlog = statuses.count("backlog")
 
         # total counts the scenarios out of the backlog.

@@ -56,6 +56,14 @@ RSpec.describe "Projects index", type: :request do
     end
   end
 
+  it "reads no more runs as more are recorded" do
+    record_runs = -> { scenarios.first(2).each { |scenario| create_list(:scenario_execution, 3, scenario: scenario, user: user, status: "passed") } }
+    record_runs.call
+    before = records_instantiated("ScenarioExecution") { card_text }
+    record_runs.call
+    expect(records_instantiated("ScenarioExecution") { card_text }).to eq(before)
+  end
+
   context "before any scenario has passed or failed" do
     before { create(:scenario_execution, scenario: scenarios.first, user: user, status: "pending") }
 
