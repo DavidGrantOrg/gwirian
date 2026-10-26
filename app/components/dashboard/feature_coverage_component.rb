@@ -41,7 +41,9 @@ module Dashboard
     attr_reader :project
 
     def features_with_stats
-      @features_with_stats ||= project.features.includes(scenarios: :scenario_executions).map do |feature|
+      @features_with_stats ||= project.features.includes(:scenarios).to_a
+        .tap { |features| Scenario.preload_latest_executions(features.flat_map(&:scenarios)) }
+        .map do |feature|
         scenarios = feature.scenarios
         statuses = scenarios.map(&:current_status)
         backlog = statuses.count("backlog")

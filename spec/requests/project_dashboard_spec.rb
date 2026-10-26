@@ -233,4 +233,18 @@ RSpec.describe "Project dashboard", type: :request do
       expect(main_text(dashboard)).not_to include("in backlog")
     end
   end
+
+  # More than Recent Executions shows, so it reads a full page both times.
+  def record_runs(count)
+    scenarios.first(2).each do |scenario|
+      count.times { |i| create(:scenario_execution, scenario: scenario, user: user, status: i.even? ? "passed" : "failed", executed_at: (i + 1).minutes.ago) }
+    end
+  end
+
+  it "reads no more runs as more are recorded" do
+    record_runs(12)
+    before = records_instantiated("ScenarioExecution") { dashboard }
+    record_runs(12)
+    expect(records_instantiated("ScenarioExecution") { dashboard }).to eq(before)
+  end
 end
