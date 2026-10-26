@@ -1,4 +1,6 @@
 # How many records of class_name Active Record builds while the block runs.
+# Records an eager_load builds from a JOIN are reported under the query's base class,
+# so they are not counted here.
 module InstantiationCounter
   def records_instantiated(class_name)
     count = 0
